@@ -1,0 +1,2 @@
+com.api.expose.framework.datapermission.config.DataPermissionAutoConfiguration
+com.api.expose.framework.datapermission.config.DeptDataPermissionAutoConfiguration

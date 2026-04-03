@@ -1,0 +1,15 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 科技感深蓝圆角背景 -->
+  <rect width="120" height="120" rx="32" fill="#0F172A"/>
+  
+  <!-- 字母 A (代表 API / Apex)，采用白色提亮 -->
+  <path d="M25 80 L48 30 L71 80" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M36 62 H60" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  
+  <!-- 字母 P (代表 Platform / 托管平台)，采用亮蓝色区分 -->
+  <path d="M78 30 V80" stroke="#38BDF8" stroke-width="10" stroke-linecap="round"/>
+  <path d="M78 30 H88 C100 30 105 40 105 50 C105 60 100 68 88 68 H78" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- 闪电接入点，作为 P 的视觉延伸，体现 Expose 动态 -->
+  <path d="M98 75 L88 92 H108 L98 108" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

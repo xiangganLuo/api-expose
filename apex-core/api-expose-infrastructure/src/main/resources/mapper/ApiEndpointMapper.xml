@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.api.expose.infrastructure.dao.IApiEndpointDao">
+
+    <resultMap id="apiEndpointMap" type="com.api.expose.infrastructure.dao.po.ApiEndpointPO">
+        <id column="id" property="id"/>
+        <result column="asset_id" property="assetId"/>
+        <result column="path" property="path"/>
+        <result column="http_method" property="httpMethod"/>
+        <result column="name" property="name"/>
+        <result column="summary" property="summary"/>
+        <result column="request_schema" property="requestSchema"/>
+        <result column="response_schema" property="responseSchema"/>
+        <result column="upstream_url" property="upstreamUrl"/>
+        <result column="timeout_ms" property="timeoutMs"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.api.expose.infrastructure.dao.po.ApiEndpointPO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO api_endpoint (asset_id, path, http_method, name, summary, request_schema, response_schema, upstream_url, timeout_ms)
+        VALUES (#{assetId}, #{path}, #{httpMethod}, #{name}, #{summary}, #{requestSchema}, #{responseSchema}, #{upstreamUrl}, #{timeoutMs})
+    </insert>
+
+</mapper>

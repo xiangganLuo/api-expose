@@ -1,0 +1,63 @@
+/* Vant 4 全局样式配置 */
+
+/* 主题颜色变量覆盖 */
+:root {
+  /* 主色调 */
+  --van-primary-color: #1989fa;
+  --van-success-color: #07c160;
+  --van-danger-color: #ee0a24;
+  --van-warning-color: #ff976a;
+  --van-info-color: #1989fa;
+  
+  /* 文字颜色 */
+  --van-text-color: #323233;
+  --van-text-color-2: #646566;
+  --van-text-color-3: #969799;
+  
+  /* 背景颜色 */
+  --van-background-color: #f7f8fa;
+  --van-background-color-light: #fafafa;
+  
+  /* 边框颜色 */
+  --van-border-color: #ebedf0;
+  
+  /* 动画时长 */
+  --van-animation-duration-base: 0.3s;
+  --van-animation-duration-fast: 0.2s;
+}
+
+/* 自定义样式补充 */
+.van-cell-group {
+  margin: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.van-button--primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.van-nav-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.van-nav-bar .van-nav-bar__title {
+  color: #fff;
+}
+
+.van-nav-bar .van-icon {
+  color: #fff;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .van-cell {
+    padding: 12px 16px;
+  }
+  
+  .van-button {
+    height: 44px;
+    border-radius: 8px;
+  }
+}

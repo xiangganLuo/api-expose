@@ -1,0 +1,3 @@
+com.api.expose.framework.datasource.config.DataSourceAutoConfiguration
+com.api.expose.framework.mybatis.config.MybatisAutoConfiguration
+com.api.expose.framework.translate.config.TranslateAutoConfiguration

@@ -1,0 +1,3 @@
+com.api.expose.framework.mq.redis.config.RedisMQProducerAutoConfiguration
+com.api.expose.framework.mq.redis.config.RedisMQConsumerAutoConfiguration
+com.api.expose.framework.mq.rabbitmq.config.RabbitMQAutoConfiguration

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.api.expose.system.dal.mysql.user.AdminUserMapper">
+
+    <!-- 根据业务表查询实际使用的用户 -->
+    <select id="selectUsersByTable" resultType="com.api.expose.system.dal.dataobject.user.AdminUserDO">
+        SELECT DISTINCT u.*
+        FROM system_users u
+        INNER JOIN ${tableName} t ON u.id = t.user_id
+        WHERE u.status = 0 
+          AND u.deleted = 0 
+          AND t.deleted = 0
+        ORDER BY u.id ASC
+    </select>
+
+</mapper>

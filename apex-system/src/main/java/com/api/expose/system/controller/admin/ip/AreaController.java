@@ -1,0 +1,62 @@
+package com.api.expose.system.controller.admin.ip;
+
+import cn.hutool.core.lang.Assert;
+import com.api.expose.framework.common.pojo.CommonResult;
+import com.api.expose.framework.common.util.object.BeanUtils;
+import com.api.expose.framework.ip.core.Area;
+import com.api.expose.framework.ip.core.enums.AreaTypeEnum;
+import com.api.expose.framework.ip.core.utils.AreaUtils;
+import com.api.expose.framework.ip.core.utils.IPUtils;
+import com.api.expose.system.controller.admin.ip.vo.AreaNodeRespVO;
+import com.api.expose.system.controller.admin.ip.vo.AreaProvinceRespVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.security.PermitAll;
+import java.util.List;
+
+import static com.api.expose.framework.common.pojo.CommonResult.success;
+
+@Tag(name = "管理后台 - 地区")
+@RestController
+@RequestMapping("/system/area")
+@Validated
+public class AreaController {
+
+    @GetMapping("/tree")
+    @Operation(summary = "获得地区树")
+    public CommonResult<List<AreaNodeRespVO>> getAreaTree() {
+        Area area = AreaUtils.getArea(Area.ID_CHINA);
+        Assert.notNull(area, "获取不到中国");
+        return success(BeanUtils.toBean(area.getChildren(), AreaNodeRespVO.class));
+    }
+
+    @GetMapping("/get-by-ip")
+    @Operation(summary = "获得 IP 对应的地区名")
+    @Parameter(name = "ip", description = "IP", required = true)
+    public CommonResult<String> getAreaByIp(@RequestParam("ip") String ip) {
+        // 获得城市
+        Area area = IPUtils.getArea(ip);
+        if (area == null) {
+            return success("未知");
+        }
+        // 格式化返回
+        return success(AreaUtils.format(area.getId()));
+    }
+
+    @GetMapping("/provinces")
+    @Operation(summary = "获得省份信息")
+    @PermitAll
+    public CommonResult<List<AreaProvinceRespVO>> getProvinces() {
+        // 直接获取所有省份信息，而不是获取中国的所有子区域
+        List<Area> provinces = AreaUtils.getByType(AreaTypeEnum.PROVINCE, area -> area);
+        return success(BeanUtils.toBean(provinces, AreaProvinceRespVO.class));
+    }
+
+}
