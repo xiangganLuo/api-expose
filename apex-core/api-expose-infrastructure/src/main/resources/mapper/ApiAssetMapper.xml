@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.api.expose.infrastructure.dao.IApiAssetDao">
+
+    <resultMap id="apiAssetMap" type="com.api.expose.infrastructure.dao.po.ApiAssetPO">
+        <id column="id" property="id"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="group_name" property="groupName"/>
+        <result column="protocol_type" property="protocolType"/>
+        <result column="status" property="status"/>
+        <result column="base_path" property="basePath"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+
+    <select id="queryListByTenantId" parameterType="java.lang.String" resultMap="apiAssetMap">
+        SELECT id, tenant_id, name, description, group_name, protocol_type, status, base_path, create_time, update_time
+        FROM api_asset
+        WHERE tenant_id = #{tenantId}
+    </select>
+
+    <update id="updateStatus" parameterType="com.api.expose.infrastructure.dao.po.ApiAssetPO">
+        UPDATE api_asset
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

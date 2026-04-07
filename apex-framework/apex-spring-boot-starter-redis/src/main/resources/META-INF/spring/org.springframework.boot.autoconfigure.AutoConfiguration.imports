@@ -1,0 +1,2 @@
+com.api.expose.framework.redis.config.RedisAutoConfiguration
+com.api.expose.framework.redis.config.CacheAutoConfiguration
