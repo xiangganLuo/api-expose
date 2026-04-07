@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="statics/imgs/logo.svg" alt="API Expose Logo" width="120"/>
+  <img src="statics/img/logo.svg" alt="API Expose Logo" width="120"/>
 </p>
 <h1 align="center">APEx</h1>
 <p align="center">
