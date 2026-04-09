@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 /**
  * 登录日志创建 Request DTO
  *
- * @author 芋道源码
+ * @author apex
  */
 @Data
 public class LoginLogCreateReqDTO {

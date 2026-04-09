@@ -3,7 +3,7 @@ package com.api.expose.system.service.member;
 /**
  * Member Service 接口
  *
- * @author 芋道源码
+ * @author apex
  */
 public interface MemberService {
 

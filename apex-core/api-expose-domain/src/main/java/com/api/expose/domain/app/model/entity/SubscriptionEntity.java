@@ -19,6 +19,9 @@ public class SubscriptionEntity {
 
     /** 订阅ID */
     private Long id;
+
+    /** 租户ID */
+    private Long tenantId;
     /** 应用ID */
     private Long appId;
     /** API 资产ID */

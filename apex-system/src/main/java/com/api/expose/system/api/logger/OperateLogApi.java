@@ -8,7 +8,7 @@ import com.api.expose.system.api.logger.dto.OperateLogRespDTO;
 /**
  * 操作日志 API 接口
  *
- * @author 芋道源码
+ * @author apex
  */
 public interface OperateLogApi extends OperateLogCommonApi {
 

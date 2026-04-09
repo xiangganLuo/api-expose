@@ -19,7 +19,7 @@ import static com.api.expose.framework.common.exception.util.ServiceExceptionUti
 /**
  * OAuth2 授予 Service 实现类
  *
- * @author 芋道源码
+ * @author apex
  */
 @Service
 public class OAuth2GrantServiceImpl implements OAuth2GrantService {

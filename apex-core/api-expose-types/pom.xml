@@ -10,9 +10,10 @@
     <artifactId>api-expose-types</artifactId>
 
     <dependencies>
+        <!-- Web 相关 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

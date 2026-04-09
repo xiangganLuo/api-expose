@@ -9,7 +9,7 @@ import com.api.expose.system.dal.dataobject.logger.OperateLogDO;
 /**
  * 操作日志 Service 接口
  *
- * @author 芋道源码
+ * @author apex
  */
 public interface OperateLogService {
 

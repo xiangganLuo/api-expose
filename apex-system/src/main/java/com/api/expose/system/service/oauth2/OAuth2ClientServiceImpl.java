@@ -30,7 +30,7 @@ import static com.api.expose.system.enums.ErrorCodeConstants.*;
 /**
  * OAuth2.0 Client Service 实现类
  *
- * @author 芋道源码
+ * @author apex
  */
 @Service
 @Validated

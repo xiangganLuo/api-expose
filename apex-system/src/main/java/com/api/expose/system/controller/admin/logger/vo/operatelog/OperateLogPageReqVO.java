@@ -13,7 +13,7 @@ import static com.api.expose.framework.common.util.date.DateUtils.FORMAT_YEAR_MO
 @Data
 public class OperateLogPageReqVO extends PageParam {
 
-    @Schema(description = "用户编号", example = "芋道")
+    @Schema(description = "用户编号", example = "apex")
     private Long userId;
 
     @Schema(description = "操作模块业务编号", example = "1")

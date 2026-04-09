@@ -9,8 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 /**
  * 治理策略聚合根 - 管理 API/应用的访问控制、限流和熔断策略
  */
@@ -22,6 +20,9 @@ public class GovernancePolicyAggregate {
 
     /** 策略ID */
     private Long policyId;
+
+    /** 租户ID */
+    private Long tenantId;
     /** 策略名称 */
     private String policyName;
     /** 生效范围 */
@@ -38,10 +39,16 @@ public class GovernancePolicyAggregate {
     private AccessControlRuleEntity accessControlRule;
     /** 是否启用 */
     private Boolean enabled;
+
+    private String rateLimitJson;
+
+    private String circuitBreakerJson;
+
+    private String accessControlJson;
     /** 创建时间 */
-    private Date createTime;
+    private java.time.LocalDateTime createTime;
     /** 更新时间 */
-    private Date updateTime;
+    private java.time.LocalDateTime updateTime;
 
     /**
      * 绑定到 API
@@ -50,7 +57,7 @@ public class GovernancePolicyAggregate {
         this.scope = PolicyScopeEnum.API_LEVEL;
         this.apiAssetId = apiAssetId;
         this.appId = null;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 
     /**
@@ -60,7 +67,7 @@ public class GovernancePolicyAggregate {
         this.scope = PolicyScopeEnum.APP_LEVEL;
         this.appId = appId;
         this.apiAssetId = null;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 
     /**
@@ -68,7 +75,7 @@ public class GovernancePolicyAggregate {
      */
     public void enable() {
         this.enabled = true;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 
     /**
@@ -76,6 +83,6 @@ public class GovernancePolicyAggregate {
      */
     public void disable() {
         this.enabled = false;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 }

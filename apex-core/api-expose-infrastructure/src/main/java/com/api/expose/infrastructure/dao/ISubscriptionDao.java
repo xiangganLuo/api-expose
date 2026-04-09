@@ -4,6 +4,10 @@ import com.api.expose.infrastructure.dao.po.SubscriptionPO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
+/*
+ * @author xiangganluo
+ */
+
 /**
  * 订阅关系数据访问对象
  */

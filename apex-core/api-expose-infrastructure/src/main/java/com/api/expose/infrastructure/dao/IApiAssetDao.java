@@ -12,9 +12,4 @@ import java.util.List;
 @Mapper
 public interface IApiAssetDao extends BaseMapper<ApiAssetPO> {
 
-    /**
-     * 根据租户 ID 查询列表
-     */
-    List<ApiAssetPO> queryListByTenantId(String tenantId);
-
 }

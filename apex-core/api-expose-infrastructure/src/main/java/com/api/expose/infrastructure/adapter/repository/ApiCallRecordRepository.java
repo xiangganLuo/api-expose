@@ -31,7 +31,9 @@ public class ApiCallRecordRepository implements IApiCallRecordRepository {
                 .responseCode(record.getResponseCode())
                 .latencyMs(record.getLatencyMs())
                 .callerIp(record.getCallerIp())
-                .callTime(record.getCallTime())
+                .callTime(record.getCallTime() != null
+                        ? record.getCallTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                        : null)
                 .build();
         apiCallRecordDao.insert(po);
     }

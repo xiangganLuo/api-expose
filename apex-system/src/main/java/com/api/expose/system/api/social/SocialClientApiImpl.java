@@ -25,7 +25,7 @@ import static com.api.expose.framework.common.util.collection.CollectionUtils.co
 /**
  * 社交应用的 API 实现类
  *
- * @author 芋道源码
+ * @author apex
  */
 @Service
 @Validated

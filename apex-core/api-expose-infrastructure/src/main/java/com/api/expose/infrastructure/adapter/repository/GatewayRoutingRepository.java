@@ -37,8 +37,8 @@ public class GatewayRoutingRepository implements IGatewayRoutingRepository {
                 .upstreamPath(po.getUpstreamPath())
                 .upstreamUrl(po.getUpstreamUrl())
                 .status(po.getStatus())
-                .createTime(po.getCreateTime())
-                .updateTime(po.getUpdateTime())
+                .createTime(po.getCreateTime() != null ? java.sql.Timestamp.valueOf(po.getCreateTime()) : null)
+                .updateTime(po.getUpdateTime() != null ? java.sql.Timestamp.valueOf(po.getUpdateTime()) : null)
                 .build();
     }
 }

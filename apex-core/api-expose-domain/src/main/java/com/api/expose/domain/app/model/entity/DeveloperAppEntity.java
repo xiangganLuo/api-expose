@@ -18,7 +18,7 @@ public class DeveloperAppEntity {
     /** 应用ID */
     private Long appId;
     /** 租户ID */
-    private String tenantId;
+    private Long tenantId;
     /** 应用名称 */
     private String appName;
     /** 应用描述 */
@@ -31,6 +31,10 @@ public class DeveloperAppEntity {
     private String apiSecret;
     /** 回调地址 */
     private String callbackUrl;
+
+    private java.time.LocalDateTime createTime;
+
+    private java.time.LocalDateTime updateTime;
 
     public void activate() {
         this.status = AppStatusEnum.ACTIVE;

@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,7 +24,7 @@ public class ApiAssetAggregate {
     /** 资产ID */
     private Long assetId;
     /** 租户ID */
-    private String tenantId;
+    private Long tenantId;
     /** API 名称 */
     private String name;
     /** API 描述 */
@@ -43,9 +42,17 @@ public class ApiAssetAggregate {
     /** 版本信息 */
     private List<ApiVersionEntity> versions;
     /** 创建时间 */
-    private Date createTime;
+    private java.time.LocalDateTime createTime;
     /** 更新时间 */
-    private Date updateTime;
+    private java.time.LocalDateTime updateTime;
+
+    public java.util.Date getCreateTimeAsDate() {
+        return createTime == null ? null : java.sql.Timestamp.valueOf(createTime);
+    }
+
+    public java.util.Date getUpdateTimeAsDate() {
+        return updateTime == null ? null : java.sql.Timestamp.valueOf(updateTime);
+    }
 
     /**
      * 发布 API 到网关
@@ -55,7 +62,7 @@ public class ApiAssetAggregate {
             throw new IllegalStateException("API 资产至少包含一个端点才能发布");
         }
         this.status = ApiStatusEnum.PUBLISHED;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 
     /**
@@ -66,7 +73,7 @@ public class ApiAssetAggregate {
             throw new IllegalStateException("API 已处于下架状态");
         }
         this.status = ApiStatusEnum.OFFLINE;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 
     /**
@@ -77,6 +84,6 @@ public class ApiAssetAggregate {
             throw new IllegalStateException("仅已发布的 API 可以标记为废弃");
         }
         this.status = ApiStatusEnum.DEPRECATED;
-        this.updateTime = new Date();
+        this.updateTime = java.time.LocalDateTime.now();
     }
 }

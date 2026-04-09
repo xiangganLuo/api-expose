@@ -14,9 +14,14 @@ public interface IApiAssetService {
     void importApi(ApiAssetAggregate aggregate, String content);
 
     /**
+     * 导入并返回资产ID
+     */
+    Long importApiAndReturnId(ApiAssetAggregate aggregate, String content);
+
+    /**
      * 查询 API 资产列表
      */
-    java.util.List<ApiAssetAggregate> queryApiAssets(String tenantId);
+    java.util.List<ApiAssetAggregate> queryApiAssets();
 
     /**
      * 查询 API 资产详情
@@ -37,4 +42,22 @@ public interface IApiAssetService {
      * 废弃 API
      */
     void deprecateApi(Long assetId);
+
+    /**
+     * 更新 API 资产
+     */
+    void updateApiAsset(ApiAssetAggregate aggregate);
+
+    /**
+     * 删除 API 资产
+     */
+    void deleteApiAsset(Long assetId);
+
+    /**
+     * 分页查询 API 资产
+     */
+    com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords,
+                                                                                   String groupName,
+                                                                                   String status,
+                                                                                   com.api.expose.framework.common.pojo.PageParam pageParam);
 }

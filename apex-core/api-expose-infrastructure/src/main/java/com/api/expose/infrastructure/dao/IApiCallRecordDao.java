@@ -19,7 +19,7 @@ public interface IApiCallRecordDao extends BaseMapper<ApiCallRecordPO> {
      * 聚合查询流量趋势
      */
     @Select("SELECT DATE_FORMAT(call_time, '%Y-%m-%d') as date, COUNT(*) as count " +
-            "FROM api_call_record " +
+            "FROM apex_api_call_record " +
             "WHERE call_time > DATE_SUB(NOW(), INTERVAL #{days} DAY) " +
             "GROUP BY date ORDER BY date")
     List<Map<String, Object>> queryTrafficTrend(@Param("days") int days);

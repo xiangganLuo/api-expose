@@ -55,6 +55,45 @@
             <groupId>com.api.expose</groupId>
             <artifactId>api-expose-types</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-biz-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-biz-ip</artifactId>
+        </dependency>
+
+        <!-- Web 相关 -->
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Job 定时任务相关 -->
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-job</artifactId>
+        </dependency>
+
+        <!-- Test 测试相关 -->
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 工具类相关 -->
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-excel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.api.expose</groupId>
+            <artifactId>apex-spring-boot-starter-protection</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -16,6 +16,8 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.api.expose.framework.tenant.core.context.TenantContextHolder.getTenantId;
+
 /**
  * API 资产领域服务实现
  */
@@ -37,7 +39,12 @@ public class ApiAssetServiceImpl implements IApiAssetService {
 
     @Override
     public void importApi(ApiAssetAggregate aggregate, String content) {
+        Long tenantId = getTenantId();
         log.info("开始导入 API: {}", aggregate.getName());
+        aggregate.setTenantId(tenantId);
+        if (aggregate.getStatus() == null) {
+            aggregate.setStatus(ApiStatusEnum.DRAFT);
+        }
         
         // 1. 解析 API 内容
         List<ApiEndpointEntity> endpoints = apiParserPort.parseOpenApi(content);
@@ -48,13 +55,19 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
+    public Long importApiAndReturnId(ApiAssetAggregate aggregate, String content) {
+        importApi(aggregate, content);
+        return aggregate.getAssetId();
+    }
+
+    @Override
     public ApiAssetAggregate queryApiAssetDetail(Long assetId) {
         return apiAssetRepository.queryApiAssetById(assetId);
     }
 
     @Override
-    public List<ApiAssetAggregate> queryApiAssets(String tenantId) {
-        return apiAssetRepository.queryApiAssetsByTenantId(tenantId);
+    public List<ApiAssetAggregate> queryApiAssets() {
+        return apiAssetRepository.queryApiAssets();
     }
 
     @Override
@@ -110,5 +123,25 @@ public class ApiAssetServiceImpl implements IApiAssetService {
         
         // 广播下架
         gatewaySyncPort.removeApiAsset(assetId);
+    }
+
+    @Override
+    public void updateApiAsset(ApiAssetAggregate aggregate) {
+        apiAssetRepository.updateApiAsset(aggregate);
+    }
+
+    @Override
+    public void deleteApiAsset(Long assetId) {
+        apiAssetRepository.deleteApiAsset(assetId);
+        apiEndpointRepository.deleteByAssetId(assetId);
+        gatewaySyncPort.removeApiAsset(assetId);
+    }
+
+    @Override
+    public com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords,
+                                                                                          String groupName,
+                                                                                          String status,
+                                                                                          com.api.expose.framework.common.pojo.PageParam pageParam) {
+        return apiAssetRepository.pageAssets(keywords, groupName, status, pageParam);
     }
 }

@@ -17,7 +17,7 @@ import java.util.Date;
 public class ApiCallRecordEntity {
 
     private Long id;
-    private String tenantId;
+    private Long tenantId;
     private Long apiAssetId;
     private Long appId;
     private String requestPath;

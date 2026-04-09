@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,8 +34,6 @@ public class ApiEndpointRepository implements IApiEndpointRepository {
                 .upstreamPath(vo.getUpstreamPath())
                 .upstreamUrl(vo.getUpstreamUrl())
                 .status(vo.getStatus())
-                .createTime(new Date())
-                .updateTime(new Date())
                 .build()).collect(Collectors.toList());
         
         for (RouteRulePO po : pos) {

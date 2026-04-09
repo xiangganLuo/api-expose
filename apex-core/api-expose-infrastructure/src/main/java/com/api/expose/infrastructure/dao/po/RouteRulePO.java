@@ -1,14 +1,14 @@
 package com.api.expose.infrastructure.dao.po;
 
+import com.api.expose.framework.tenant.core.db.TenantBaseDO;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 /*
  * @author xiangganluo
@@ -22,7 +22,8 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("apex_route_rule")
-public class RouteRulePO {
+@EqualsAndHashCode(callSuper = true)
+public class RouteRulePO extends TenantBaseDO {
 
     /** 主键ID */
     @TableId(type = IdType.AUTO)
@@ -41,8 +42,4 @@ public class RouteRulePO {
     private String upstreamUrl;
     /** 状态 (ACTIVE/INACTIVE) */
     private String status;
-    /** 创建时间 */
-    private Date createTime;
-    /** 更新时间 */
-    private Date updateTime;
 }

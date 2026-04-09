@@ -12,7 +12,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,7 +37,9 @@ public class MeteringRepository implements IMeteringRepository {
                 .responseCode(record.getResponseCode())
                 .latencyMs(record.getLatencyMs())
                 .callerIp(record.getCallerIp())
-                .callTime(record.getCallTime())
+                .callTime(record.getCallTime() != null
+                        ? record.getCallTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                        : null)
                 .build();
         apiCallRecordDao.insert(po);
     }
@@ -52,13 +53,13 @@ public class MeteringRepository implements IMeteringRepository {
     }
 
     @Override
-    public MeteringStatAggregate queryStat(String tenantId, String dimension, String dimensionValue, Date start, Date end) {
+    public MeteringStatAggregate queryStat(String tenantId, String dimension, String dimensionValue, java.util.Date start, java.util.Date end) {
         LambdaQueryWrapper<MeteringStatPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MeteringStatPO::getTenantId, tenantId)
+        wrapper.eq(MeteringStatPO::getTenantId, Long.valueOf(tenantId))
                 .eq(MeteringStatPO::getDimension, dimension)
                 .eq(MeteringStatPO::getDimensionValue, dimensionValue)
-                .eq(MeteringStatPO::getWindowStart, start)
-                .eq(MeteringStatPO::getWindowEnd, end);
+                .eq(MeteringStatPO::getWindowStart, start != null ? java.time.LocalDateTime.ofInstant(start.toInstant(), java.time.ZoneId.systemDefault()) : null)
+                .eq(MeteringStatPO::getWindowEnd, end != null ? java.time.LocalDateTime.ofInstant(end.toInstant(), java.time.ZoneId.systemDefault()) : null);
         
         MeteringStatPO po = meteringStatDao.selectOne(wrapper);
         if (po == null) {
@@ -74,8 +75,8 @@ public class MeteringRepository implements IMeteringRepository {
                 .successCalls(po.getSuccessCalls())
                 .failCalls(po.getFailCalls())
                 .avgLatencyMs(po.getAvgLatencyMs())
-                .windowStart(po.getWindowStart())
-                .windowEnd(po.getWindowEnd())
+                .windowStart(po.getWindowStart() != null ? java.sql.Timestamp.valueOf(po.getWindowStart()) : null)
+                .windowEnd(po.getWindowEnd() != null ? java.sql.Timestamp.valueOf(po.getWindowEnd()) : null)
                 .build();
     }
 
@@ -90,8 +91,12 @@ public class MeteringRepository implements IMeteringRepository {
                 .successCalls(stat.getSuccessCalls())
                 .failCalls(stat.getFailCalls())
                 .avgLatencyMs(stat.getAvgLatencyMs())
-                .windowStart(stat.getWindowStart())
-                .windowEnd(stat.getWindowEnd())
+                .windowStart(stat.getWindowStart() != null
+                        ? java.time.LocalDateTime.ofInstant(stat.getWindowStart().toInstant(), java.time.ZoneId.systemDefault())
+                        : null)
+                .windowEnd(stat.getWindowEnd() != null
+                        ? java.time.LocalDateTime.ofInstant(stat.getWindowEnd().toInstant(), java.time.ZoneId.systemDefault())
+                        : null)
                 .build();
         
         if (po.getId() != null) {

@@ -19,7 +19,7 @@ import static com.api.expose.system.dal.redis.RedisKeyConstants.OAUTH2_ACCESS_TO
 /**
  * {@link OAuth2AccessTokenDO} 的 RedisDAO
  *
- * @author 芋道源码
+ * @author apex
  */
 @Repository
 public class OAuth2AccessTokenRedisDAO {

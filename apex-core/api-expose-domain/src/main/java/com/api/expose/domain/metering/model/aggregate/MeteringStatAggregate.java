@@ -22,7 +22,7 @@ public class MeteringStatAggregate {
     /** 统计ID */
     private Long statId;
     /** 租户ID */
-    private String tenantId;
+    private Long tenantId;
     /** 统计维度 */
     private MeteringDimensionEnum dimension;
     /** 维度值（apiAssetId / appId / tenantId） */

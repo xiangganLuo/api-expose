@@ -2,17 +2,16 @@ package com.api.expose.infrastructure.adapter.repository;
 
 import com.api.expose.domain.api.adapter.repository.IApiAssetRepository;
 import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
-import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
-import com.api.expose.domain.api.model.entity.ApiVersionEntity;
-import com.api.expose.domain.api.model.valobj.ApiDefinitionVO;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
-import com.api.expose.domain.api.model.valobj.HttpMethodEnum;
 import com.api.expose.infrastructure.dao.IApiAssetDao;
 import com.api.expose.infrastructure.dao.IApiEndpointDao;
 import com.api.expose.infrastructure.dao.IApiVersionDao;
 import com.api.expose.infrastructure.dao.po.ApiAssetPO;
 import com.api.expose.infrastructure.dao.po.ApiEndpointPO;
 import com.api.expose.infrastructure.dao.po.ApiVersionPO;
+import com.api.expose.infrastructure.convert.api.ApiAssetConvert;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,37 +37,18 @@ public class ApiAssetRepository implements IApiAssetRepository {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveApiAsset(ApiAssetAggregate aggregate) {
+    public Long saveApiAsset(ApiAssetAggregate aggregate) {
         // 1. 保存资产基本信息
-        ApiAssetPO assetPO = ApiAssetPO.builder()
-                .tenantId(aggregate.getTenantId())
-                .name(aggregate.getName())
-                .description(aggregate.getDescription())
-                .groupName(aggregate.getGroupName())
-                .protocolType(aggregate.getProtocolType() != null ? aggregate.getProtocolType().name() : "HTTP")
-                .status(aggregate.getStatus().getCode())
-                .basePath(aggregate.getBasePath())
-                .build();
+        ApiAssetPO assetPO = ApiAssetConvert.INSTANCE.convert(aggregate);
         
         apiAssetDao.insert(assetPO);
         Long assetId = assetPO.getId();
+        aggregate.setAssetId(assetId);
 
         // 2. 保存端点信息
         if (aggregate.getEndpoints() != null) {
             aggregate.getEndpoints().forEach(e -> {
-                ApiEndpointPO endpointPO = ApiEndpointPO.builder()
-                        .assetId(assetId)
-                        .path(e.getPath())
-                        .httpMethod(e.getHttpMethod().getCode())
-                        .name(e.getName())
-                        .summary(e.getSummary())
-                        .upstreamUrl(e.getUpstreamUrl())
-                        .timeoutMs(e.getTimeoutMs())
-                        .build();
-                if (e.getDefinition() != null) {
-                    endpointPO.setRequestSchema(e.getDefinition().getRequestSchema());
-                    endpointPO.setResponseSchema(e.getDefinition().getResponseSchema());
-                }
+                ApiEndpointPO endpointPO = ApiAssetConvert.INSTANCE.convert(e, assetPO.getTenantId(), assetId);
                 apiEndpointDao.insert(endpointPO);
             });
         }
@@ -76,15 +56,12 @@ public class ApiAssetRepository implements IApiAssetRepository {
         // 3. 保存版本信息
         if (aggregate.getVersions() != null) {
             aggregate.getVersions().forEach(v -> {
-                ApiVersionPO versionPO = ApiVersionPO.builder()
-                        .assetId(assetId)
-                        .version(v.getVersion())
-                        .active(v.isActive() ? 1 : 0)
-                        .releaseNote(v.getReleaseNote())
-                        .build();
+                ApiVersionPO versionPO = ApiAssetConvert.INSTANCE.convert(v, assetPO.getTenantId(), assetId);
                 apiVersionDao.insert(versionPO);
             });
         }
+
+        return assetId;
     }
 
     @Override
@@ -92,15 +69,17 @@ public class ApiAssetRepository implements IApiAssetRepository {
         ApiAssetPO assetPO = apiAssetDao.selectById(assetId);
         if (assetPO == null) return null;
 
-        List<ApiEndpointPO> endpointPOs = apiEndpointDao.queryByAssetId(assetId);
-        List<ApiVersionPO> versionPOs = apiVersionDao.queryByAssetId(assetId);
+        List<ApiEndpointPO> endpointPOs = apiEndpointDao.selectList(
+                new LambdaQueryWrapper<ApiEndpointPO>().eq(ApiEndpointPO::getAssetId, assetId));
+        List<ApiVersionPO> versionPOs = apiVersionDao.selectList(
+                new LambdaQueryWrapper<ApiVersionPO>().eq(ApiVersionPO::getAssetId, assetId));
 
         return buildAggregate(assetPO, endpointPOs, versionPOs);
     }
 
     @Override
-    public List<ApiAssetAggregate> queryApiAssetsByTenantId(String tenantId) {
-        List<ApiAssetPO> assetPOs = apiAssetDao.queryListByTenantId(tenantId);
+    public List<ApiAssetAggregate> queryApiAssets() {
+        List<ApiAssetPO> assetPOs = apiAssetDao.selectList(new LambdaQueryWrapper<>());
         return assetPOs.stream()
                 .map(po -> buildAggregate(po, Collections.emptyList(), Collections.emptyList()))
                 .collect(Collectors.toList());
@@ -115,28 +94,71 @@ public class ApiAssetRepository implements IApiAssetRepository {
         apiAssetDao.updateById(po);
     }
 
-    private ApiAssetAggregate buildAggregate(ApiAssetPO assetPO, List<ApiEndpointPO> endpointPOs, List<ApiVersionPO> versionPOs) {
-        List<ApiEndpointEntity> endpoints = endpointPOs.stream().map(po -> ApiEndpointEntity.builder()
-                .endpointId(po.getId())
-                .path(po.getPath())
-                .httpMethod(HttpMethodEnum.valueOf(po.getHttpMethod().toUpperCase()))
-                .name(po.getName())
-                .summary(po.getSummary())
-                .upstreamUrl(po.getUpstreamUrl())
-                .timeoutMs(po.getTimeoutMs())
-                .definition(ApiDefinitionVO.builder()
-                        .requestSchema(po.getRequestSchema())
-                        .responseSchema(po.getResponseSchema())
-                        .build())
-                .build()).collect(Collectors.toList());
+    @Override
+    public void updateApiAsset(ApiAssetAggregate aggregate) {
+        ApiAssetPO po = ApiAssetConvert.INSTANCE.convert(aggregate);
+        apiAssetDao.updateById(po);
+    }
 
-        List<ApiVersionEntity> versions = versionPOs.stream().map(po -> ApiVersionEntity.builder()
-                .versionId(po.getId())
-                .version(po.getVersion())
-                .active(po.getActive() == 1)
-                .releaseNote(po.getReleaseNote())
-                .createTime(po.getCreateTime())
-                .build()).collect(Collectors.toList());
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteApiAsset(Long assetId) {
+        apiAssetDao.deleteById(assetId);
+        apiEndpointDao.delete(new LambdaQueryWrapper<ApiEndpointPO>().eq(ApiEndpointPO::getAssetId, assetId));
+        apiVersionDao.delete(new LambdaQueryWrapper<ApiVersionPO>().eq(ApiVersionPO::getAssetId, assetId));
+    }
+
+    @Override
+    public com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords, String groupName, String status,
+                                                                                           com.api.expose.framework.common.pojo.PageParam pageParam) {
+        LambdaQueryWrapper<ApiAssetPO> wrapper = new LambdaQueryWrapper<>();
+        if (StrUtil.isNotBlank(keywords)) {
+            wrapper.like(ApiAssetPO::getName, keywords).or().like(ApiAssetPO::getGroupName, keywords);
+        }
+        if (StrUtil.isNotBlank(groupName)) {
+            wrapper.eq(ApiAssetPO::getGroupName, groupName);
+        }
+        if (StrUtil.isNotBlank(status)) {
+            wrapper.eq(ApiAssetPO::getStatus, status);
+        }
+        wrapper.orderByDesc(ApiAssetPO::getCreateTime);
+
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiAssetPO> page =
+                apiAssetDao.selectPage(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageParam.getPageNo(), pageParam.getPageSize()), wrapper);
+        java.util.List<ApiAssetAggregate> list = page.getRecords().stream()
+                .map(po -> buildAggregate(po, java.util.Collections.emptyList(), java.util.Collections.emptyList()))
+                .collect(java.util.stream.Collectors.toList());
+        return new com.api.expose.framework.common.pojo.PageResult<>(list, page.getTotal());
+    }
+
+    private ApiAssetAggregate buildAggregate(ApiAssetPO assetPO, List<ApiEndpointPO> endpointPOs, List<ApiVersionPO> versionPOs) {
+        List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> endpoints = endpointPOs.stream().map(po ->
+                com.api.expose.domain.api.model.entity.ApiEndpointEntity.builder()
+                        .endpointId(po.getId())
+                        .path(po.getPath())
+                        .httpMethod(po.getHttpMethod() != null
+                                ? com.api.expose.domain.api.model.valobj.HttpMethodEnum.valueOf(po.getHttpMethod().toUpperCase())
+                                : null)
+                        .name(po.getName())
+                        .summary(po.getSummary())
+                        .upstreamUrl(po.getUpstreamUrl())
+                        .timeoutMs(po.getTimeoutMs())
+                        .definition(com.api.expose.domain.api.model.valobj.ApiDefinitionVO.builder()
+                                .requestSchema(po.getRequestSchema())
+                                .responseSchema(po.getResponseSchema())
+                                .build())
+                        .build()
+        ).collect(Collectors.toList());
+
+        List<com.api.expose.domain.api.model.entity.ApiVersionEntity> versions = versionPOs.stream().map(po ->
+                com.api.expose.domain.api.model.entity.ApiVersionEntity.builder()
+                        .versionId(po.getId())
+                        .version(po.getVersion())
+                        .active(po.getActive() != null && po.getActive() == 1)
+                        .releaseNote(po.getReleaseNote())
+                        .createTime(po.getCreateTime() != null ? java.sql.Timestamp.valueOf(po.getCreateTime()) : null)
+                        .build()
+        ).collect(Collectors.toList());
 
         return ApiAssetAggregate.builder()
                 .assetId(assetPO.getId())
@@ -144,7 +166,8 @@ public class ApiAssetRepository implements IApiAssetRepository {
                 .name(assetPO.getName())
                 .description(assetPO.getDescription())
                 .groupName(assetPO.getGroupName())
-                .status(ApiStatusEnum.getEnumByCode(assetPO.getStatus()))
+                .protocolType(assetPO.getProtocolType() != null ? com.api.expose.domain.api.model.valobj.ProtocolTypeEnum.valueOf(assetPO.getProtocolType()) : null)
+                .status(assetPO.getStatus() != null ? com.api.expose.domain.api.model.valobj.ApiStatusEnum.getEnumByCode(assetPO.getStatus()) : null)
                 .basePath(assetPO.getBasePath())
                 .endpoints(endpoints)
                 .versions(versions)

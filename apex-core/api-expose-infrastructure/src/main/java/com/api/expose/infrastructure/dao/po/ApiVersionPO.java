@@ -1,14 +1,14 @@
 package com.api.expose.infrastructure.dao.po;
 
+import com.api.expose.framework.tenant.core.db.TenantBaseDO;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 /*
  * @author xiangganluo
@@ -22,11 +22,14 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("apex_api_version")
-public class ApiVersionPO {
+@EqualsAndHashCode(callSuper = true)
+public class ApiVersionPO extends TenantBaseDO {
 
     /** 主键ID */
     @TableId(type = IdType.AUTO)
     private Long id;
+
+    private Long tenantId;
     /** 所属资产ID */
     private Long assetId;
     /** 版本号 */
@@ -35,6 +38,4 @@ public class ApiVersionPO {
     private Integer active;
     /** 发布日志 */
     private String releaseNote;
-    /** 创建时间 */
-    private Date createTime;
 }
