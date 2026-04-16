@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * API 订阅关系实体
@@ -30,17 +30,22 @@ public class SubscriptionEntity {
     private SubscriptionStatusEnum status;
     /** 备注 */
     private String remark;
-    /** 申请时间 */
-    private Date applyTime;
+    /** 申请时间(创建时间) */
+    private LocalDateTime applyTime;
     /** 通过时间 */
-    private Date approveTime;
+    private LocalDateTime approveTime;
+
+    /** 申请时间别名，兼容 VO */
+    public LocalDateTime getCreateTime() {
+        return applyTime;
+    }
 
     /**
      * 审核通过
      */
     public void approve() {
         this.status = SubscriptionStatusEnum.APPROVED;
-        this.approveTime = new Date();
+        this.approveTime = LocalDateTime.now();
     }
 
     /**
@@ -51,3 +56,4 @@ public class SubscriptionEntity {
         this.remark = remark;
     }
 }
+

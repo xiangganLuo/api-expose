@@ -1,5 +1,6 @@
 package com.api.expose.trigger.controller.admin;
 
+import cn.hutool.core.util.StrUtil;
 import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
 import com.api.expose.domain.api.model.valobj.ProtocolTypeEnum;
@@ -10,10 +11,16 @@ import com.api.expose.trigger.controller.admin.vo.asset.ApexApiAssetImportReqVO;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiAssetPageReqVO;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiAssetRespVO;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiAssetUpdateReqVO;
-import com.google.common.collect.Lists;
+import com.api.expose.trigger.controller.admin.vo.asset.ApexApiTryReqVO;
+import com.api.expose.trigger.controller.admin.vo.asset.ApexApiEndpointRespVO;
+import com.api.expose.trigger.controller.admin.vo.asset.ApexApiEndpointSaveReqVO;
+import com.api.expose.trigger.controller.admin.vo.asset.ApexApiVersionRespVO;
+import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +29,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
-
-/*
- * @author xiangganluo
- */
 
 import static com.api.expose.framework.common.pojo.CommonResult.success;
 
@@ -98,10 +101,10 @@ public class ApexApiAssetController {
 
     @PostMapping("/publish")
     @Operation(summary = "资产发布")
-    @Parameter(name = "id", description = "资产编号", required = true)
     @PreAuthorize("@ss.hasPermission('apex:asset:publish')")
-    public CommonResult<Boolean> publish(@RequestParam("id") Long id) {
-        apiAssetService.publishApi(id);
+    public CommonResult<Boolean> publish(@RequestParam("id") Long id,
+                                         @RequestParam("envCode") String envCode) {
+        apiAssetService.publishApi(id, envCode);
         return success(true);
     }
 
@@ -123,6 +126,148 @@ public class ApexApiAssetController {
         return success(true);
     }
 
+    @PostMapping("/try")
+    @Operation(summary = "在线调试")
+    @PreAuthorize("@ss.hasPermission('apex:asset:try')")
+    public ResponseEntity<byte[]> tryEndpoint(@Valid @RequestBody ApexApiTryReqVO reqVO) {
+        // 1. 获取调试环境
+        String envCode = StrUtil.nullToDefault(reqVO.getEnvCode(), "test");
+
+        // 2. 找到对应的端点获取路径
+        List<ApiEndpointEntity> endpoints = apiAssetService.queryEndpoints(reqVO.getAssetId());
+        ApiEndpointEntity endpoint = endpoints.stream()
+                .filter(e -> e.getPath().equals(reqVO.getEndpointPath()))
+                .findFirst().orElse(null);
+
+        if (endpoint == null) {
+            return ResponseEntity.status(404).body("Endpoint not found".getBytes());
+        }
+
+        // 3. 获取环境对应的 BaseUrl
+        List<com.api.expose.domain.api.model.entity.ApiAssetEnvEntity> assetEnvs = apiAssetService.queryAssetEnvs(reqVO.getAssetId());
+        String baseUrl = assetEnvs.stream()
+                .filter(env -> env.getEnvCode().equals(envCode))
+                .map(com.api.expose.domain.api.model.entity.ApiAssetEnvEntity::getBaseUrl)
+                .findFirst().orElse(null);
+
+        if (StrUtil.isBlank(baseUrl)) {
+            // 如果环境未配置，尝试使用默认上游地址 (如果有的话)
+            baseUrl = endpoint.getUpstreamUrl();
+        } else {
+            // 拼接最终地址
+            baseUrl = resolveUrl(baseUrl, endpoint.getPath());
+        }
+
+        // TODO 对接 HttpForwardService 实现真实转发；当前占位返回 501
+        return ResponseEntity.status(501).body(("Target URL: " + baseUrl + " | Environment: " + envCode + " | forward service pending").getBytes());
+    }
+
+    private String resolveUrl(String baseUrl, String relativePath) {
+        if (StrUtil.isBlank(relativePath)) return baseUrl;
+        boolean baseEndsWithSlash = baseUrl.endsWith("/");
+        boolean pathStartsWithSlash = relativePath.startsWith("/");
+        if (baseEndsWithSlash && pathStartsWithSlash) return baseUrl + relativePath.substring(1);
+        else if (!baseEndsWithSlash && !pathStartsWithSlash) return baseUrl + "/" + relativePath;
+        else return baseUrl + relativePath;
+    }
+
+    // ====== 资产环境配置 ======
+
+    @GetMapping("/envs/list")
+    @Operation(summary = "查询资产环境列表")
+    @Parameter(name = "assetId", description = "资产编号", required = true)
+    @PreAuthorize("@ss.hasPermission('apex:asset:query')")
+    public CommonResult<List<com.api.expose.trigger.controller.admin.vo.asset.env.ApexAssetEnvRespVO>> getAssetEnvs(@RequestParam("assetId") Long assetId) {
+        List<com.api.expose.domain.api.model.entity.ApiAssetEnvEntity> list = apiAssetService.queryAssetEnvs(assetId);
+        return success(list.stream().map(this::convert).collect(Collectors.toList()));
+    }
+
+    @PostMapping("/envs/save")
+    @Operation(summary = "保存资产环境 (新增/更新)")
+    @PreAuthorize("@ss.hasPermission('apex:asset:update')")
+    public CommonResult<Boolean> saveAssetEnv(@Valid @RequestBody com.api.expose.trigger.controller.admin.vo.asset.env.ApexAssetEnvSaveReqVO reqVO) {
+        com.api.expose.domain.api.model.entity.ApiAssetEnvEntity entity = com.api.expose.domain.api.model.entity.ApiAssetEnvEntity.builder()
+                .id(reqVO.getId())
+                .assetId(reqVO.getAssetId())
+                .envCode(reqVO.getEnvCode())
+                .envName(reqVO.getEnvName())
+                .baseUrl(reqVO.getBaseUrl())
+                .status(reqVO.getStatus())
+                .build();
+        entity.validate();
+        apiAssetService.saveAssetEnv(entity);
+        return success(true);
+    }
+
+    @DeleteMapping("/envs/delete")
+    @Operation(summary = "删除资产环境")
+    @Parameter(name = "id", description = "配置编号", required = true)
+    @PreAuthorize("@ss.hasPermission('apex:asset:update')")
+    public CommonResult<Boolean> deleteAssetEnv(@RequestParam("id") Long id) {
+        apiAssetService.removeAssetEnv(id);
+        return success(true);
+    }
+
+    private com.api.expose.trigger.controller.admin.vo.asset.env.ApexAssetEnvRespVO convert(com.api.expose.domain.api.model.entity.ApiAssetEnvEntity entity) {
+        com.api.expose.trigger.controller.admin.vo.asset.env.ApexAssetEnvRespVO vo = new com.api.expose.trigger.controller.admin.vo.asset.env.ApexAssetEnvRespVO();
+        vo.setId(entity.getId());
+        vo.setAssetId(entity.getAssetId());
+        vo.setEnvCode(entity.getEnvCode());
+        vo.setEnvName(entity.getEnvName());
+        vo.setBaseUrl(entity.getBaseUrl());
+        vo.setStatus(entity.getStatus());
+        return vo;
+    }
+
+    @GetMapping("/endpoints/list")
+    @Operation(summary = "查询端点列表")
+    @Parameter(name = "assetId", description = "资产编号", required = true)
+    @PreAuthorize("@ss.hasPermission('apex:asset:query')")
+    public CommonResult<List<ApexApiEndpointRespVO>> getEndpoints(@RequestParam("assetId") Long assetId) {
+        List<ApiEndpointEntity> list = apiAssetService.queryEndpoints(assetId);
+        return success(list.stream().map(this::convert).collect(Collectors.toList()));
+    }
+
+    @PostMapping("/endpoints/save")
+    @Operation(summary = "保存端点 (新增/更新)")
+    @PreAuthorize("@ss.hasPermission('apex:asset:update')")
+    public CommonResult<Boolean> saveEndpoint(@Valid @RequestBody ApexApiEndpointSaveReqVO reqVO) {
+        ApiEndpointEntity entity = ApiEndpointEntity.builder()
+                .endpointId(reqVO.getId())
+                .assetId(reqVO.getAssetId())
+                .path(reqVO.getPath())
+                .httpMethod(com.api.expose.domain.api.model.valobj.HttpMethodEnum.valueOf(reqVO.getHttpMethod().toUpperCase()))
+                .name(reqVO.getName())
+                .summary(reqVO.getSummary())
+                .upstreamUrl(reqVO.getUpstreamUrl())
+                .timeoutMs(reqVO.getTimeoutMs())
+                .definition(com.api.expose.domain.api.model.valobj.ApiDefinitionVO.builder()
+                        .requestSchema(reqVO.getRequestSchema())
+                        .responseSchema(reqVO.getResponseSchema())
+                        .build())
+                .build();
+        apiAssetService.saveEndpoint(entity);
+        return success(true);
+    }
+
+    @DeleteMapping("/endpoints/delete")
+    @Operation(summary = "删除端点")
+    @Parameter(name = "id", description = "端点编号", required = true)
+    @PreAuthorize("@ss.hasPermission('apex:asset:update')")
+    public CommonResult<Boolean> deleteEndpoint(@RequestParam("id") Long id) {
+        apiAssetService.removeEndpoint(id);
+        return success(true);
+    }
+
+    @GetMapping("/versions/list")
+    @Operation(summary = "查询版本记录")
+    @Parameter(name = "assetId", description = "资产编号", required = true)
+    @PreAuthorize("@ss.hasPermission('apex:asset:query')")
+    public CommonResult<List<ApexApiVersionRespVO>> getVersions(@RequestParam("assetId") Long assetId) {
+        List<com.api.expose.domain.api.model.entity.ApiVersionEntity> list = apiAssetService.queryVersions(assetId);
+        return success(list.stream().map(this::convert).collect(Collectors.toList()));
+    }
+
     private ApexApiAssetRespVO convert(ApiAssetAggregate agg) {
         ApexApiAssetRespVO vo = new ApexApiAssetRespVO();
         vo.setId(agg.getAssetId());
@@ -136,4 +281,33 @@ public class ApexApiAssetController {
         vo.setUpdateTime(agg.getUpdateTime());
         return vo;
     }
+
+    private ApexApiEndpointRespVO convert(ApiEndpointEntity entity) {
+        ApexApiEndpointRespVO vo = new ApexApiEndpointRespVO();
+        vo.setId(entity.getEndpointId());
+        vo.setAssetId(entity.getAssetId());
+        vo.setPath(entity.getPath());
+        vo.setHttpMethod(entity.getHttpMethod() != null ? entity.getHttpMethod().getCode() : null);
+        vo.setName(entity.getName());
+        vo.setSummary(entity.getSummary());
+        if (entity.getDefinition() != null) {
+            vo.setRequestSchema(entity.getDefinition().getRequestSchema());
+            vo.setResponseSchema(entity.getDefinition().getResponseSchema());
+        }
+        vo.setUpstreamUrl(entity.getUpstreamUrl());
+        vo.setTimeoutMs(entity.getTimeoutMs());
+        return vo;
+    }
+
+    private ApexApiVersionRespVO convert(com.api.expose.domain.api.model.entity.ApiVersionEntity entity) {
+        ApexApiVersionRespVO vo = new ApexApiVersionRespVO();
+        vo.setId(entity.getVersionId());
+        vo.setAssetId(null); // Entity 中暂未透传 assetId，此处由前端上下文持有
+        vo.setVersion(entity.getVersion());
+        vo.setActive(entity.isActive() ? 1 : 0);
+        vo.setReleaseNote(entity.getReleaseNote());
+        vo.setCreateTime(entity.getCreateTime() != null ? new java.sql.Timestamp(entity.getCreateTime().getTime()).toLocalDateTime() : null);
+        return vo;
+    }
 }
+

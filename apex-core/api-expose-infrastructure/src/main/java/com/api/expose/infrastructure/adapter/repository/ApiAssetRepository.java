@@ -132,7 +132,24 @@ public class ApiAssetRepository implements IApiAssetRepository {
     }
 
     private ApiAssetAggregate buildAggregate(ApiAssetPO assetPO, List<ApiEndpointPO> endpointPOs, List<ApiVersionPO> versionPOs) {
-        List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> endpoints = endpointPOs.stream().map(po ->
+        return ApiAssetAggregate.builder()
+                .assetId(assetPO.getId())
+                .tenantId(assetPO.getTenantId())
+                .name(assetPO.getName())
+                .description(assetPO.getDescription())
+                .groupName(assetPO.getGroupName())
+                .protocolType(assetPO.getProtocolType() != null ? com.api.expose.domain.api.model.valobj.ProtocolTypeEnum.valueOf(assetPO.getProtocolType()) : null)
+                .status(assetPO.getStatus() != null ? com.api.expose.domain.api.model.valobj.ApiStatusEnum.getEnumByCode(assetPO.getStatus()) : null)
+                .basePath(assetPO.getBasePath())
+                .endpoints(convertEndpoints(endpointPOs))
+                .versions(convertVersions(versionPOs))
+                .createTime(assetPO.getCreateTime())
+                .updateTime(assetPO.getUpdateTime())
+                .build();
+    }
+
+    private List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> convertEndpoints(List<ApiEndpointPO> pos) {
+        return pos.stream().map(po ->
                 com.api.expose.domain.api.model.entity.ApiEndpointEntity.builder()
                         .endpointId(po.getId())
                         .path(po.getPath())
@@ -149,8 +166,10 @@ public class ApiAssetRepository implements IApiAssetRepository {
                                 .build())
                         .build()
         ).collect(Collectors.toList());
+    }
 
-        List<com.api.expose.domain.api.model.entity.ApiVersionEntity> versions = versionPOs.stream().map(po ->
+    private List<com.api.expose.domain.api.model.entity.ApiVersionEntity> convertVersions(List<ApiVersionPO> pos) {
+        return pos.stream().map(po ->
                 com.api.expose.domain.api.model.entity.ApiVersionEntity.builder()
                         .versionId(po.getId())
                         .version(po.getVersion())
@@ -159,20 +178,35 @@ public class ApiAssetRepository implements IApiAssetRepository {
                         .createTime(po.getCreateTime() != null ? java.sql.Timestamp.valueOf(po.getCreateTime()) : null)
                         .build()
         ).collect(Collectors.toList());
+    }
 
-        return ApiAssetAggregate.builder()
-                .assetId(assetPO.getId())
-                .tenantId(assetPO.getTenantId())
-                .name(assetPO.getName())
-                .description(assetPO.getDescription())
-                .groupName(assetPO.getGroupName())
-                .protocolType(assetPO.getProtocolType() != null ? com.api.expose.domain.api.model.valobj.ProtocolTypeEnum.valueOf(assetPO.getProtocolType()) : null)
-                .status(assetPO.getStatus() != null ? com.api.expose.domain.api.model.valobj.ApiStatusEnum.getEnumByCode(assetPO.getStatus()) : null)
-                .basePath(assetPO.getBasePath())
-                .endpoints(endpoints)
-                .versions(versions)
-                .createTime(assetPO.getCreateTime())
-                .updateTime(assetPO.getUpdateTime())
-                .build();
+    @Override
+    public List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> queryEndpointsByAssetId(Long assetId) {
+        List<ApiEndpointPO> pos = apiEndpointDao.selectList(new LambdaQueryWrapper<ApiEndpointPO>().eq(ApiEndpointPO::getAssetId, assetId));
+        return convertEndpoints(pos);
+    }
+
+    @Override
+    public void saveEndpoint(com.api.expose.domain.api.model.entity.ApiEndpointEntity endpoint, Long assetId) {
+        ApiAssetPO assetPO = apiAssetDao.selectById(assetId);
+        if (assetPO == null) return;
+        ApiEndpointPO po = ApiAssetConvert.INSTANCE.convert(endpoint, assetPO.getTenantId(), assetId);
+        if (po.getId() == null) {
+            apiEndpointDao.insert(po);
+        } else {
+            apiEndpointDao.updateById(po);
+        }
+    }
+
+    @Override
+    public void deleteEndpoint(Long endpointId) {
+        apiEndpointDao.deleteById(endpointId);
+    }
+
+    @Override
+    public List<com.api.expose.domain.api.model.entity.ApiVersionEntity> queryVersionsByAssetId(Long assetId) {
+        List<ApiVersionPO> pos = apiVersionDao.selectList(new LambdaQueryWrapper<ApiVersionPO>().eq(ApiVersionPO::getAssetId, assetId));
+        return convertVersions(pos);
     }
 }
+

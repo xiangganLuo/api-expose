@@ -18,6 +18,8 @@ public class ApiEndpointEntity {
 
     /** 端点ID */
     private Long endpointId;
+    /** 所属资产ID */
+    private Long assetId;
     /** 路由路径 (如 /api/v1/users) */
     private String path;
     /** HTTP 方法 */

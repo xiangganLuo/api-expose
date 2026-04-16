@@ -39,6 +39,7 @@ public interface ApiAssetConvert {
             return null;
         }
         ApiEndpointPO po = new ApiEndpointPO();
+        po.setId(entity.getEndpointId());
         po.setTenantId(tenantId);
         po.setAssetId(assetId);
         po.setPath(entity.getPath());
@@ -57,6 +58,7 @@ public interface ApiAssetConvert {
             return null;
         }
         ApiVersionPO po = new ApiVersionPO();
+        po.setId(entity.getVersionId());
         po.setTenantId(tenantId);
         po.setAssetId(assetId);
         po.setVersion(entity.getVersion());

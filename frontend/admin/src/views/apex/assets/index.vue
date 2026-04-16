@@ -34,13 +34,15 @@
       <el-table-column prop="protocolType" label="协议" width="90" />
       <el-table-column prop="status" label="状态" width="110" />
       <el-table-column prop="basePath" label="BasePath" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column label="操作" width="310" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="goDetail(scope.row)">详情</el-button>
           <el-button link type="primary" @click="openEdit(scope.row)">编辑</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row)">删除</el-button>
           <el-button link type="success" @click="handlePublish(scope.row)">发布</el-button>
           <el-button link type="warning" @click="handleOffline(scope.row)">下架</el-button>
           <el-button link type="danger" @click="handleDeprecate(scope.row)">废弃</el-button>
+          <el-button link type="primary" @click="openTry(scope.row)">调试</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -55,16 +57,28 @@
 
   <el-dialog v-model="importVisible" title="导入 API 资产" width="720px">
     <el-form :model="importForm" label-width="90px">
-      <el-form-item label="groupName">
+      <el-form-item label="分组名称">
         <el-input v-model="importForm.groupName" placeholder="例如：petstore" />
       </el-form-item>
-      <el-form-item label="fileContent">
+      <el-form-item label="导入源">
+        <el-radio-group v-model="importForm.sourceType">
+          <el-radio label="OPENAPI_CONTENT">文本内容</el-radio>
+          <el-radio label="OPENAPI_URL">JSON URL</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item v-if="importForm.sourceType === 'OPENAPI_CONTENT'" label="文本内容">
         <el-input
           v-model="importForm.fileContent"
           type="textarea"
           :rows="10"
           placeholder="粘贴 OpenAPI JSON/YAML 内容"
         />
+      </el-form-item>
+      <el-form-item v-if="importForm.sourceType === 'OPENAPI_URL'" label="源 URL">
+        <el-input v-model="importForm.sourceUrl" placeholder="https://example.com/api-docs.json" />
+      </el-form-item>
+      <el-form-item label="覆盖现有">
+        <el-switch v-model="importForm.override" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -101,16 +115,48 @@
       <el-button type="primary" :loading="editLoading" @click="handleUpdate">保存</el-button>
     </template>
   </el-dialog>
+
+  <el-dialog v-model="tryVisible" title="在线调试" width="780px">
+    <el-form :model="tryForm" label-width="110px">
+      <el-form-item label="endpointPath">
+        <el-input v-model="tryForm.endpointPath" placeholder="例如：/pets" />
+      </el-form-item>
+      <el-form-item label="httpMethod">
+        <el-select v-model="tryForm.httpMethod" class="!w-200px">
+          <el-option label="GET" value="GET" />
+          <el-option label="POST" value="POST" />
+          <el-option label="PUT" value="PUT" />
+          <el-option label="DELETE" value="DELETE" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="headers (JSON)">
+        <el-input v-model="tryForm.headersJson" type="textarea" :rows="3" placeholder='{"Content-Type":"application/json"}' />
+      </el-form-item>
+      <el-form-item label="body">
+        <el-input v-model="tryForm.body" type="textarea" :rows="5" placeholder="请求体（可选）" />
+      </el-form-item>
+    </el-form>
+    <el-divider v-if="tryResult !== undefined" />
+    <div v-if="tryResult !== undefined">
+      <strong>响应结果：</strong>
+      <el-input type="textarea" :rows="8" :model-value="tryResult" readonly />
+    </div>
+    <template #footer>
+      <el-button @click="tryVisible = false">关闭</el-button>
+      <el-button type="primary" :loading="tryLoading" @click="handleTry">发送请求</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import ContentWrap from '@/components/ContentWrap/src/ContentWrap.vue'
 import * as AssetsApi from '@/api/apex/assets'
-
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({ name: 'ApexAssets' })
 
+const { push } = useRouter()
 const message = useMessage()
 
 const loading = ref(false)
@@ -141,18 +187,31 @@ const handleQuery = () => {
   getList()
 }
 
+const goDetail = (row: AssetsApi.ApexApiAssetVO) => {
+  push({ name: 'ApexApiAssetDetail', query: { id: row.id } })
+}
+
+
 const importVisible = ref(false)
 const importLoading = ref(false)
 const importForm = reactive<AssetsApi.ApexApiImportReqVO>({
   groupName: '',
-  fileContent: ''
+  sourceType: 'OPENAPI_CONTENT',
+  fileContent: '',
+  sourceUrl: '',
+  override: false
 })
+
 
 const openImport = () => {
   importVisible.value = true
   importForm.groupName = ''
+  importForm.sourceType = 'OPENAPI_CONTENT'
   importForm.fileContent = ''
+  importForm.sourceUrl = ''
+  importForm.override = false
 }
+
 
 const handleImport = async () => {
   importLoading.value = true
@@ -220,7 +279,62 @@ const handleDelete = async (row: AssetsApi.ApexApiAssetVO) => {
   } catch {}
 }
 
+// ====== 在线调试 ======
+const tryVisible = ref(false)
+const tryLoading = ref(false)
+const tryResult = ref<string | undefined>(undefined)
+const tryForm = reactive<any>({
+  assetId: undefined,
+  endpointPath: '',
+  httpMethod: 'GET',
+  headersJson: '',
+  body: ''
+})
+
+const openTry = (row: AssetsApi.ApexApiAssetVO) => {
+  tryForm.assetId = row.id
+  tryForm.endpointPath = ''
+  tryForm.httpMethod = 'GET'
+  tryForm.headersJson = ''
+  tryForm.body = ''
+  tryResult.value = undefined
+  tryVisible.value = true
+}
+
+const handleTry = async () => {
+  tryLoading.value = true
+  try {
+    let headers: Record<string, string> | undefined
+    if (tryForm.headersJson) {
+      try {
+        headers = JSON.parse(tryForm.headersJson)
+      } catch {
+        message.error('headers JSON 格式不正确')
+        return
+      }
+    }
+    const reqVO: AssetsApi.ApexApiTryReqVO = {
+      assetId: tryForm.assetId,
+      endpointPath: tryForm.endpointPath,
+      httpMethod: tryForm.httpMethod,
+      headers,
+      body: tryForm.body || undefined
+    }
+    const resp = await AssetsApi.tryApiAsset(reqVO)
+    if (resp instanceof ArrayBuffer) {
+      tryResult.value = new TextDecoder().decode(resp)
+    } else {
+      tryResult.value = typeof resp === 'string' ? resp : JSON.stringify(resp, null, 2)
+    }
+  } catch (e: any) {
+    tryResult.value = `Error: ${e.message || e}`
+  } finally {
+    tryLoading.value = false
+  }
+}
+
 onMounted(() => {
   getList()
 })
 </script>
+

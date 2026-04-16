@@ -1,9 +1,11 @@
 package com.api.expose.domain.api.service.impl;
 
 import com.api.expose.domain.api.adapter.port.IApiParserPort;
+import com.api.expose.domain.api.adapter.repository.IApiAssetEnvRepository;
 import com.api.expose.domain.api.adapter.repository.IApiAssetRepository;
 import com.api.expose.domain.api.adapter.repository.IApiEndpointRepository;
 import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
+import com.api.expose.domain.api.model.entity.ApiAssetEnvEntity;
 import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
 import com.api.expose.domain.api.model.valobj.RouteRuleVO;
@@ -36,6 +38,9 @@ public class ApiAssetServiceImpl implements IApiAssetService {
 
     @Resource
     private IApiEndpointRepository apiEndpointRepository;
+
+    @Resource
+    private IApiAssetEnvRepository apiAssetEnvRepository;
 
     @Override
     public void importApi(ApiAssetAggregate aggregate, String content) {
@@ -71,29 +76,71 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
-    public void publishApi(Long assetId) {
-        log.info("正在发布 API: {}", assetId);
+    public void publishApi(Long assetId, String envCode) {
+        log.info("正在发布 API: {} 到环境: {}", assetId, envCode);
         ApiAssetAggregate aggregate = apiAssetRepository.queryApiAssetById(assetId);
         if (aggregate == null) return;
         
+        // 获取环境对应的 BaseUrl
+        String baseUrl = apiAssetEnvRepository.queryBaseUrl(assetId, envCode);
+        if (cn.hutool.core.util.StrUtil.isBlank(baseUrl)) {
+            throw new RuntimeException("所选环境未配置 BaseUrl，请先在环境配置中设置");
+        }
+
         aggregate.publish();
         apiAssetRepository.updateApiStatus(assetId, aggregate.getStatus());
         
         // 生成并保存路由规则
-        List<RouteRuleVO> routeRules = aggregate.getEndpoints().stream().map(e -> RouteRuleVO.builder()
-                .apiAssetId(assetId)
-                .endpointId(e.getEndpointId())
-                .httpMethod(e.getHttpMethod().getCode())
-                .gatewayPath("/" + aggregate.getGroupName() + e.getPath())
-                .upstreamPath(e.getPath())
-                .upstreamUrl(e.getUpstreamUrl())
-                .status("ACTIVE")
-                .build()).collect(Collectors.toList());
+        List<RouteRuleVO> routeRules = aggregate.getEndpoints().stream().map(e -> {
+            // 解析最终地址 (BaseUrl + RelativePath)
+            String resolvedUrl = resolveUrl(baseUrl, e.getPath());
+
+            return RouteRuleVO.builder()
+                    .apiAssetId(assetId)
+                    .endpointId(e.getEndpointId())
+                    .httpMethod(e.getHttpMethod().getCode())
+                    .gatewayPath("/" + aggregate.getGroupName() + e.getPath())
+                    .upstreamPath(e.getPath())
+                    .upstreamUrl(resolvedUrl)
+                    .status("ACTIVE")
+                    .build();
+        }).collect(Collectors.toList());
         
         apiEndpointRepository.saveEndpoints(assetId, routeRules);
         
         // 广播同步到网关
         gatewaySyncPort.syncApiAsset(aggregate);
+    }
+
+    private String resolveUrl(String baseUrl, String relativePath) {
+        if (cn.hutool.core.util.StrUtil.isBlank(relativePath)) {
+            return baseUrl;
+        }
+        boolean baseEndsWithSlash = baseUrl.endsWith("/");
+        boolean pathStartsWithSlash = relativePath.startsWith("/");
+
+        if (baseEndsWithSlash && pathStartsWithSlash) {
+            return baseUrl + relativePath.substring(1);
+        } else if (!baseEndsWithSlash && !pathStartsWithSlash) {
+            return baseUrl + "/" + relativePath;
+        } else {
+            return baseUrl + relativePath;
+        }
+    }
+
+    @Override
+    public void saveAssetEnv(ApiAssetEnvEntity entity) {
+        apiAssetEnvRepository.save(entity);
+    }
+
+    @Override
+    public List<ApiAssetEnvEntity> queryAssetEnvs(Long assetId) {
+        return apiAssetEnvRepository.queryListByAssetId(assetId);
+    }
+
+    @Override
+    public void removeAssetEnv(Long id) {
+        apiAssetEnvRepository.removeById(id);
     }
 
     @Override
@@ -143,5 +190,25 @@ public class ApiAssetServiceImpl implements IApiAssetService {
                                                                                           String status,
                                                                                           com.api.expose.framework.common.pojo.PageParam pageParam) {
         return apiAssetRepository.pageAssets(keywords, groupName, status, pageParam);
+    }
+
+    @Override
+    public List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> queryEndpoints(Long assetId) {
+        return apiAssetRepository.queryEndpointsByAssetId(assetId);
+    }
+
+    @Override
+    public void saveEndpoint(com.api.expose.domain.api.model.entity.ApiEndpointEntity endpoint) {
+        apiAssetRepository.saveEndpoint(endpoint, endpoint.getAssetId());
+    }
+
+    @Override
+    public void removeEndpoint(Long endpointId) {
+        apiAssetRepository.deleteEndpoint(endpointId);
+    }
+
+    @Override
+    public List<com.api.expose.domain.api.model.entity.ApiVersionEntity> queryVersions(Long assetId) {
+        return apiAssetRepository.queryVersionsByAssetId(assetId);
     }
 }

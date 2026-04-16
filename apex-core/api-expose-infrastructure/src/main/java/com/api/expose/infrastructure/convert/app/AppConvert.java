@@ -44,19 +44,9 @@ public interface AppConvert {
 
     @Mapping(source = "id", target = "id")
     @Mapping(target = "status", expression = "java(entity.getStatus() != null ? entity.getStatus().getCode() : null)")
+    @Mapping(target = "applyTime", source = "applyTime")
+    @Mapping(target = "approveTime", source = "approveTime")
     SubscriptionPO convert(SubscriptionEntity entity);
-
-    default SubscriptionPO convertTimes(SubscriptionEntity entity, SubscriptionPO po) {
-        if (entity == null) return po;
-        if (po == null) po = new SubscriptionPO();
-        po.setApplyTime(entity.getApplyTime() != null
-                ? entity.getApplyTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
-                : null);
-        po.setApproveTime(entity.getApproveTime() != null
-                ? entity.getApproveTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
-                : null);
-        return po;
-    }
 
     default SubscriptionEntity convert(SubscriptionPO po) {
         if (po == null) {
@@ -68,8 +58,8 @@ public interface AppConvert {
                 .appId(po.getAppId())
                 .apiAssetId(po.getApiAssetId())
                 .status(po.getStatus() != null ? SubscriptionStatusEnum.getEnumByCode(po.getStatus()) : null)
-                .applyTime(po.getApplyTime() != null ? java.sql.Timestamp.valueOf(po.getApplyTime()) : null)
-                .approveTime(po.getApproveTime() != null ? java.sql.Timestamp.valueOf(po.getApproveTime()) : null)
+                .applyTime(po.getApplyTime())
+                .approveTime(po.getApproveTime())
                 .remark(po.getRemark())
                 .build();
     }

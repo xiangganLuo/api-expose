@@ -47,4 +47,25 @@ public interface IApiAssetRepository {
                                                                                    String groupName,
                                                                                    String status,
                                                                                    com.api.expose.framework.common.pojo.PageParam pageParam);
+
+    /**
+     * 查询资产下的所有端点
+     */
+    java.util.List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> queryEndpointsByAssetId(Long assetId);
+
+    /**
+     * 保存端点
+     */
+    void saveEndpoint(com.api.expose.domain.api.model.entity.ApiEndpointEntity endpoint, Long assetId);
+
+    /**
+     * 删除端点
+     */
+    void deleteEndpoint(Long endpointId);
+
+    /**
+     * 查询资产的所有版本记录
+     */
+    java.util.List<com.api.expose.domain.api.model.entity.ApiVersionEntity> queryVersionsByAssetId(Long assetId);
 }
+

@@ -89,6 +89,7 @@ public class ApexSubscriptionAdminController {
         vo.setApiAssetId(entity.getApiAssetId());
         vo.setStatus(entity.getStatus() != null ? entity.getStatus().getCode() : null);
         vo.setRemark(entity.getRemark());
+        vo.setCreateTime(entity.getCreateTime());
         return vo;
     }
 }

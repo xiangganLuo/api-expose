@@ -233,6 +233,28 @@ const remainingRouter: AppRouteRecordRaw[] = [
       title: '500',
       noTagsView: true
     }
+  },
+  {
+    path: '/apex/asset-detail',
+    component: Layout,
+    name: 'ApexApiAssetDetailParent',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/apex/assets/detail.vue'),
+        name: 'ApexApiAssetDetail',
+        meta: {
+          title: '资产详情',
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          activeMenu: '/apex/assets'
+        }
+      }
+    ]
   }
 ]
 

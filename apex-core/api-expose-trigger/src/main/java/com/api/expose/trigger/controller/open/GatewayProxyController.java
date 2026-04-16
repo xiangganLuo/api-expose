@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ public class GatewayProxyController {
      * 鉴权: 必须在 Header 包含 X-API-KEY 或在参数中包含 apiKey
      */
     @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    @PermitAll
     public Mono<ResponseEntity<byte[]>> proxy(
             @RequestHeader(value = "X-API-KEY", required = false) String headerKey,
             @RequestParam(value = "apiKey", required = false) String queryKey,
@@ -44,7 +46,7 @@ public class GatewayProxyController {
             HttpServletRequest request) {
 
         String apiKey = (headerKey != null) ? headerKey : queryKey;
-        String path = request.getRequestURI().substring(5); // substring("/open".length())
+        String path = request.getRequestURI().substring(5);
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
         Map<String, String> headers = new HashMap<>();

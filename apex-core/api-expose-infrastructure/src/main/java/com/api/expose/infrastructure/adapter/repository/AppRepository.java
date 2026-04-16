@@ -95,7 +95,6 @@ public class AppRepository implements IAppRepository {
         String status = subscriptionEntity.getStatus() != null ? subscriptionEntity.getStatus().getCode() : SubscriptionStatusEnum.PENDING.getCode();
 
         SubscriptionPO po = AppConvert.INSTANCE.convert(subscriptionEntity);
-        po = AppConvert.INSTANCE.convertTimes(subscriptionEntity, po);
         po.setStatus(status);
         if (po.getApplyTime() == null) {
             po.setApplyTime(java.time.LocalDateTime.now());
