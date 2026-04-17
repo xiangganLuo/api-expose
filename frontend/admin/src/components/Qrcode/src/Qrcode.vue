@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {computed, nextTick, PropType, ref, unref, watch} from 'vue'
-import QRCode, {QRCodeRenderersOptions} from './Qrcode.vue'
+import * as QRCode from 'qrcode'
+import type {QRCodeRenderersOptions} from 'qrcode'
 import {cloneDeep} from 'lodash-es'
 import {propTypes} from '@/utils/propTypes'
 import {useDesign} from '@/hooks/web/useDesign'

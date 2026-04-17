@@ -2,6 +2,7 @@ package com.api.expose.domain.metering.adapter.repository;
 
 import com.api.expose.domain.metering.model.entity.ApiCallRecordEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,5 +20,25 @@ public interface IApiCallRecordRepository {
      * @return key:日期, value:调用次数
      */
     Map<String, Long> queryTrafficTrend(int days);
+
+    /**
+     * 查询应用的聚合指标概览
+     */
+    Map<String, Object> queryAppMetricsOverview(Long appId, int days);
+
+    /**
+     * 查询应用的调用趋势
+     */
+    List<Map<String, Object>> queryAppMetricsTrend(Long appId, int days);
+
+    /**
+     * 查询资产的聚合指标概览
+     */
+    Map<String, Object> queryAssetMetricsOverview(Long apiAssetId, int days);
+
+    /**
+     * 查询资产的调用趋势
+     */
+    List<Map<String, Object>> queryAssetMetricsTrend(Long apiAssetId, int days);
 
 }

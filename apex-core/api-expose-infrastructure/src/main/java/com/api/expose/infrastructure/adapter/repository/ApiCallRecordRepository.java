@@ -49,4 +49,24 @@ public class ApiCallRecordRepository implements IApiCallRecordRepository {
         }
         return trend;
     }
+
+    @Override
+    public Map<String, Object> queryAppMetricsOverview(Long appId, int days) {
+        return apiCallRecordDao.queryAppMetricsOverview(appId, days);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryAppMetricsTrend(Long appId, int days) {
+        return apiCallRecordDao.queryAppMetricsTrend(appId, days);
+    }
+
+    @Override
+    public Map<String, Object> queryAssetMetricsOverview(Long apiAssetId, int days) {
+        return apiCallRecordDao.queryAssetMetricsOverview(apiAssetId, days);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryAssetMetricsTrend(Long apiAssetId, int days) {
+        return apiCallRecordDao.queryAssetMetricsTrend(apiAssetId, days);
+    }
 }

@@ -15,10 +15,28 @@
         </el-select>
       </el-form-item>
       <el-form-item label="apiAssetId" prop="apiAssetId">
-        <el-input-number v-model="queryParams.apiAssetId" class="!w-200px" :min="1" />
+        <el-select 
+          v-model="queryParams.apiAssetId" 
+          filterable remote reserve-keyword clearable
+          placeholder="搜索API资产..."
+          :remote-method="handleAssetSearch"
+          :loading="assetSearchLoading"
+          class="!w-200px"
+        >
+          <el-option v-for="item in assetOptions" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="appId" prop="appId">
-        <el-input-number v-model="queryParams.appId" class="!w-200px" :min="1" />
+        <el-select 
+          v-model="queryParams.appId" 
+          filterable remote reserve-keyword clearable
+          placeholder="搜索应用..."
+          :remote-method="handleAppSearch"
+          :loading="appSearchLoading"
+          class="!w-200px"
+        >
+          <el-option v-for="item in appOptions" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="enabled" prop="enabled">
         <el-select v-model="queryParams.enabled" clearable class="!w-200px" placeholder="全部">
@@ -79,11 +97,29 @@
           <el-option label="APP_LEVEL" value="APP_LEVEL" />
         </el-select>
       </el-form-item>
-      <el-form-item label="apiAssetId">
-        <el-input-number v-model="form.apiAssetId" class="!w-240px" :min="1" />
+      <el-form-item label="apiAssetId" v-if="form.scope === 'API_LEVEL'">
+        <el-select 
+          v-model="form.apiAssetId" 
+          filterable remote reserve-keyword clearable
+          placeholder="搜索API资产..."
+          :remote-method="handleAssetSearch"
+          :loading="assetSearchLoading"
+          class="!w-240px"
+        >
+          <el-option v-for="item in assetOptions" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
       </el-form-item>
-      <el-form-item label="appId">
-        <el-input-number v-model="form.appId" class="!w-240px" :min="1" />
+      <el-form-item label="appId" v-if="form.scope === 'APP_LEVEL'">
+        <el-select 
+          v-model="form.appId" 
+          filterable remote reserve-keyword clearable
+          placeholder="搜索应用..."
+          :remote-method="handleAppSearch"
+          :loading="appSearchLoading"
+          class="!w-240px"
+        >
+          <el-option v-for="item in appOptions" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="enabled">
         <el-switch v-model="form.enabled" />
@@ -108,6 +144,8 @@
 <script lang="ts" setup>
 import ContentWrap from '@/components/ContentWrap/src/ContentWrap.vue'
 import * as PolicyApi from '@/api/apex/policies'
+import * as AssetsApi from '@/api/apex/assets'
+import * as AppsApi from '@/api/apex/apps'
 
 import { onMounted, reactive, ref } from 'vue'
 
@@ -183,6 +221,34 @@ const openEdit = async (id: number) => {
   const data = await PolicyApi.getPolicy(id)
   formVisible.value = true
   Object.assign(form, data)
+  handleAssetSearch('')
+  handleAppSearch('')
+}
+
+const assetSearchLoading = ref(false)
+const assetOptions = ref<any[]>([])
+const handleAssetSearch = async (queryStr: string) => {
+  assetSearchLoading.value = true
+  try {
+    const res = await AssetsApi.getApiAssetPage({ pageNo: 1, pageSize: 50, keywords: queryStr })
+    assetOptions.value = res.list
+  } catch (e) {
+  } finally {
+    assetSearchLoading.value = false
+  }
+}
+
+const appSearchLoading = ref(false)
+const appOptions = ref<any[]>([])
+const handleAppSearch = async (queryStr: string) => {
+  appSearchLoading.value = true
+  try {
+    const res = await AppsApi.getAppPage({ pageNo: 1, pageSize: 50, keywords: queryStr })
+    appOptions.value = res.list
+  } catch (e) {
+  } finally {
+    appSearchLoading.value = false
+  }
 }
 
 const handleSubmit = async () => {
@@ -218,5 +284,7 @@ const handleUpdateStatus = async (id: number, enabled: boolean) => {
 
 onMounted(() => {
   getList()
+  handleAssetSearch('')
+  handleAppSearch('')
 })
 </script>

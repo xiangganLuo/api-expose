@@ -1,5 +1,6 @@
 package com.api.expose.trigger.controller.admin;
 
+import com.api.expose.domain.metering.model.valobj.MetricAggregationVO;
 import com.api.expose.domain.metering.service.IMetricsService;
 import com.api.expose.framework.common.pojo.CommonResult;
 import com.api.expose.trigger.controller.admin.vo.metrics.ApexMetricAppReqVO;
@@ -47,10 +48,19 @@ public class ApexMetricsController {
     @Operation(summary = "按应用查询指标")
     @PreAuthorize("@ss.hasPermission('apex:metrics:query')")
     public CommonResult<ApexMetricRespVO> metricsByApp(@Valid ApexMetricAppReqVO reqVO) {
-        // TODO 对接 IMetricsService 实现按 appId 维度的指标聚合
+        MetricAggregationVO vo = metricsService.getAppMetrics(reqVO.getAppId(), reqVO.getDays());
         ApexMetricRespVO resp = ApexMetricRespVO.builder()
-                .totalCalls(0L).successCalls(0L).failCalls(0L)
-                .avgLatencyMs(0.0).series(Collections.emptyList())
+                .totalCalls(vo.getTotalCalls())
+                .successCalls(vo.getSuccessCalls())
+                .failCalls(vo.getFailCalls())
+                .avgLatencyMs(vo.getAvgLatencyMs())
+                .series(vo.getSeries().stream().map(p -> ApexMetricRespVO.MetricPoint.builder()
+                        .time(p.getTime())
+                        .calls(p.getCalls())
+                        .successCalls(p.getSuccessCalls())
+                        .failCalls(p.getFailCalls())
+                        .avgLatencyMs(p.getAvgLatencyMs())
+                        .build()).collect(java.util.stream.Collectors.toList()))
                 .build();
         return success(resp);
     }
@@ -59,10 +69,19 @@ public class ApexMetricsController {
     @Operation(summary = "按资产查询指标")
     @PreAuthorize("@ss.hasPermission('apex:metrics:query')")
     public CommonResult<ApexMetricRespVO> metricsByAsset(@Valid ApexMetricAssetReqVO reqVO) {
-        // TODO 对接 IMetricsService 实现按 apiAssetId 维度的指标聚合
+        MetricAggregationVO vo = metricsService.getAssetMetrics(reqVO.getApiAssetId(), reqVO.getDays());
         ApexMetricRespVO resp = ApexMetricRespVO.builder()
-                .totalCalls(0L).successCalls(0L).failCalls(0L)
-                .avgLatencyMs(0.0).series(Collections.emptyList())
+                .totalCalls(vo.getTotalCalls())
+                .successCalls(vo.getSuccessCalls())
+                .failCalls(vo.getFailCalls())
+                .avgLatencyMs(vo.getAvgLatencyMs())
+                .series(vo.getSeries().stream().map(p -> ApexMetricRespVO.MetricPoint.builder()
+                        .time(p.getTime())
+                        .calls(p.getCalls())
+                        .successCalls(p.getSuccessCalls())
+                        .failCalls(p.getFailCalls())
+                        .avgLatencyMs(p.getAvgLatencyMs())
+                        .build()).collect(java.util.stream.Collectors.toList()))
                 .build();
         return success(resp);
     }

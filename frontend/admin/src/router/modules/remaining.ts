@@ -255,7 +255,30 @@ const remainingRouter: AppRouteRecordRaw[] = [
         }
       }
     ]
+  },
+  {
+    path: '/apex/app-detail',
+    component: Layout,
+    name: 'ApexAppDetailParent',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/apex/apps/detail.vue'),
+        name: 'ApexAppDetail',
+        meta: {
+          title: '应用详情',
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          activeMenu: '/apex/apps'
+        }
+      }
+    ]
   }
 ]
+
 
 export default remainingRouter

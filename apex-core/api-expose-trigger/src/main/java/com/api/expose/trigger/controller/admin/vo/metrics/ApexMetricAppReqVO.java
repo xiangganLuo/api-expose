@@ -21,17 +21,8 @@ public class ApexMetricAppReqVO {
     @NotNull(message = "appId 不能为空")
     private Long appId;
 
-    @Schema(description = "开始时间", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "startTime 不能为空")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private LocalDateTime startTime;
-
-    @Schema(description = "结束时间", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "endTime 不能为空")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private LocalDateTime endTime;
-
-    @Schema(description = "粒度(hour/day/week)", example = "day")
-    private String granularity;
+    @Schema(description = "查询天数", requiredMode = Schema.RequiredMode.REQUIRED, example = "2022-02-02 00:00:00")
+    @NotNull(message = "查询天数不能为空")
+    private Integer days;
 
 }

@@ -30,6 +30,7 @@
       <el-table-column align="center" label="状态" prop="status" width="110" />
       <el-table-column align="center" label="操作" width="220">
         <template #default="scope">
+          <el-button link type="primary" @click="goDetail(scope.row)">详情</el-button>
           <el-button link type="primary" @click="openEdit(scope.row)">编辑</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -96,6 +97,7 @@ import { onMounted, reactive, ref } from 'vue'
 defineOptions({ name: 'ApexApps' })
 
 const message = useMessage()
+const { push } = useRouter()
 
 const loading = ref(false)
 const list = ref<AppsApi.ApexDeveloperAppVO[]>([])
@@ -185,6 +187,10 @@ const handleDelete = async (row: AppsApi.ApexDeveloperAppVO) => {
     message.success('删除成功')
     await getList()
   } catch {}
+}
+
+const goDetail = (row: AppsApi.ApexDeveloperAppVO) => {
+  push({ path: '/apex/app-detail/index', query: { id: row.id } })
 }
 
 onMounted(() => {

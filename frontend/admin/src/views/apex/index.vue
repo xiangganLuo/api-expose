@@ -29,6 +29,13 @@
           <el-button type="primary" @click="go('/apex/policies')">进入治理策略</el-button>
         </el-card>
       </el-col>
+      <el-col :span="8">
+        <el-card shadow="never">
+          <template #header>监控</template>
+          <div class="text-gray-500 mb-10px">调用趋势 / 指标查看</div>
+          <el-button type="primary" @click="go('/apex/metrics')">进入监控指标</el-button>
+        </el-card>
+      </el-col>
     </el-row>
   </ContentWrap>
 </template>

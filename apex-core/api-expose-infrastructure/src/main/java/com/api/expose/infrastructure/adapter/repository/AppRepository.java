@@ -16,7 +16,6 @@ import com.api.expose.infrastructure.convert.app.AppConvert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -130,7 +129,7 @@ public class AppRepository implements IAppRepository {
         if (apiAssetId != null) {
             wrapper.eq(SubscriptionPO::getApiAssetId, apiAssetId);
         }
-        if (status != null && !StringUtils.hasText(status)) {
+        if (StrUtil.isNotBlank(status)) {
             wrapper.eq(SubscriptionPO::getStatus, status);
         }
         wrapper.orderByDesc(SubscriptionPO::getCreateTime);

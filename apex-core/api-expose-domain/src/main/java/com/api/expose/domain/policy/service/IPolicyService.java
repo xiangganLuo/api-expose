@@ -6,11 +6,13 @@ package com.api.expose.domain.policy.service;
 public interface IPolicyService {
 
     /**
-     * 校验资产调用策略
+     * 执行综合治理策略检查 (黑名单、限流、熔断等)
+     * @param appId 应用ID
      * @param apiKey 应用密钥
      * @param assetId 资产ID
-     * @return true-通过, false-拦截
+     * @param clientIp 客户端请求IP
+     * @throws RuntimeException 当某项策略未通过时抛出具体的异常信息
      */
-    boolean checkRateLimit(String apiKey, Long assetId);
+    void checkGovernance(Long appId, String apiKey, Long assetId, String clientIp);
 
 }

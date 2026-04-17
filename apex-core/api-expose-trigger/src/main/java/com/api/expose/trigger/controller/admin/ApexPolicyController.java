@@ -32,7 +32,7 @@ import static com.api.expose.framework.tenant.core.context.TenantContextHolder.g
 @RestController
 @RequestMapping("/apex/policies")
 @Validated
-public class ApexPolicyAdminController {
+public class ApexPolicyController {
 
     @Resource
     private IPolicyRepository policyRepository;
