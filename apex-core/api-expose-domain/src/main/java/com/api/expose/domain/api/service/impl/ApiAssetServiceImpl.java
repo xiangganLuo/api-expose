@@ -11,6 +11,7 @@ import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
 import com.api.expose.domain.api.model.valobj.RouteRuleVO;
 import com.api.expose.domain.api.service.IApiAssetService;
 import com.api.expose.domain.gateway.adapter.port.IGatewaySyncPort;
+import com.api.expose.framework.common.pojo.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -165,7 +166,6 @@ public class ApiAssetServiceImpl implements IApiAssetService {
         ApiAssetAggregate aggregate = apiAssetRepository.queryApiAssetById(assetId);
         if (aggregate == null) return;
         
-        aggregate.offline(); // 废弃前先下线
         apiAssetRepository.updateApiStatus(assetId, ApiStatusEnum.DEPRECATED);
         
         // 广播下架
@@ -185,10 +185,10 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
-    public com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords,
-                                                                                          String groupName,
-                                                                                          String status,
-                                                                                          com.api.expose.framework.common.pojo.PageParam pageParam) {
+    public PageResult<ApiAssetAggregate> pageAssets(String keywords,
+                                                    String groupName,
+                                                    String status,
+                                                    com.api.expose.framework.common.pojo.PageParam pageParam) {
         return apiAssetRepository.pageAssets(keywords, groupName, status, pageParam);
     }
 

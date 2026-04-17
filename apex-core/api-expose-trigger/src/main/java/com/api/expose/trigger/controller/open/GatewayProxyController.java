@@ -1,6 +1,7 @@
 package com.api.expose.trigger.controller.open;
 
 import com.api.expose.domain.gateway.service.IGatewayService;
+import com.api.expose.framework.tenant.core.aop.TenantIgnore;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
@@ -39,6 +40,7 @@ public class GatewayProxyController {
      */
     @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     @PermitAll
+    @TenantIgnore
     public Mono<ResponseEntity<byte[]>> proxy(
             @RequestHeader(value = "X-API-KEY", required = false) String headerKey,
             @RequestParam(value = "apiKey", required = false) String queryKey,
@@ -47,6 +49,7 @@ public class GatewayProxyController {
 
         String apiKey = (headerKey != null) ? headerKey : queryKey;
         String path = request.getRequestURI().substring(5);
+        String queryString = request.getQueryString();
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
         Map<String, String> headers = new HashMap<>();
@@ -56,6 +59,6 @@ public class GatewayProxyController {
             headers.put(name, request.getHeader(name));
         }
 
-        return gatewayService.execute(apiKey, path, method, headers, body);
+        return gatewayService.execute(apiKey, path, queryString, method, headers, body);
     }
 }

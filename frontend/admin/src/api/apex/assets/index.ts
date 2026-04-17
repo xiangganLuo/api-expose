@@ -93,7 +93,7 @@ export const deprecateApiAsset = async (id: number): Promise<boolean> => {
 }
 
 export const tryApiAsset = async (data: ApexApiTryReqVO): Promise<any> => {
-  return await request.post({ url: '/apex/assets/try', data, responseType: 'arraybuffer' })
+  return await request.postOriginal({ url: '/apex/assets/try', data, responseType: 'arraybuffer' })
 }
 
 // 查询端点列表

@@ -19,9 +19,7 @@
         <el-button type="primary" @click="handleQuery">
           <Icon icon="ep:search" class="mr-5px" /> 查询
         </el-button>
-        <el-button @click="openImport">
-          <Icon icon="ep:upload" class="mr-5px" /> 导入
-        </el-button>
+        <el-button @click="openImport"> <Icon icon="ep:upload" class="mr-5px" /> 导入 </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -39,7 +37,6 @@
           <el-button link type="primary" @click="goDetail(scope.row)">详情</el-button>
           <el-button link type="primary" @click="openEdit(scope.row)">编辑</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row)">删除</el-button>
-          <el-button link type="success" @click="handlePublish(scope.row)">发布</el-button>
           <el-button link type="warning" @click="handleOffline(scope.row)">下架</el-button>
           <el-button link type="danger" @click="handleDeprecate(scope.row)">废弃</el-button>
           <el-button link type="primary" @click="openTry(scope.row)">调试</el-button>
@@ -130,7 +127,12 @@
         </el-select>
       </el-form-item>
       <el-form-item label="headers (JSON)">
-        <el-input v-model="tryForm.headersJson" type="textarea" :rows="3" placeholder='{"Content-Type":"application/json"}' />
+        <el-input
+          v-model="tryForm.headersJson"
+          type="textarea"
+          :rows="3"
+          placeholder='{"Content-Type":"application/json"}'
+        />
       </el-form-item>
       <el-form-item label="body">
         <el-input v-model="tryForm.body" type="textarea" :rows="5" placeholder="请求体（可选）" />
@@ -191,7 +193,6 @@ const goDetail = (row: AssetsApi.ApexApiAssetVO) => {
   push({ name: 'ApexApiAssetDetail', query: { id: row.id } })
 }
 
-
 const importVisible = ref(false)
 const importLoading = ref(false)
 const importForm = reactive<AssetsApi.ApexApiImportReqVO>({
@@ -202,7 +203,6 @@ const importForm = reactive<AssetsApi.ApexApiImportReqVO>({
   override: false
 })
 
-
 const openImport = () => {
   importVisible.value = true
   importForm.groupName = ''
@@ -211,7 +211,6 @@ const openImport = () => {
   importForm.sourceUrl = ''
   importForm.override = false
 }
-
 
 const handleImport = async () => {
   importLoading.value = true
@@ -223,12 +222,6 @@ const handleImport = async () => {
   } finally {
     importLoading.value = false
   }
-}
-
-const handlePublish = async (row: AssetsApi.ApexApiAssetVO) => {
-  await AssetsApi.publishApiAsset(row.id)
-  message.success('发布成功')
-  await getList()
 }
 
 const handleOffline = async (row: AssetsApi.ApexApiAssetVO) => {
@@ -245,7 +238,14 @@ const handleDeprecate = async (row: AssetsApi.ApexApiAssetVO) => {
 
 const editVisible = ref(false)
 const editLoading = ref(false)
-const editForm = reactive<any>({ id: undefined, name: '', groupName: '', basePath: '', status: '', description: '' })
+const editForm = reactive<any>({
+  id: undefined,
+  name: '',
+  groupName: '',
+  basePath: '',
+  status: '',
+  description: ''
+})
 
 const openEdit = async (row: AssetsApi.ApexApiAssetVO) => {
   const data = await AssetsApi.getApiAssetDetail(row.id)
@@ -337,4 +337,3 @@ onMounted(() => {
   getList()
 })
 </script>
-

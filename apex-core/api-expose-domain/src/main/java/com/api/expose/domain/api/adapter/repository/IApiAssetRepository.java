@@ -1,7 +1,10 @@
 package com.api.expose.domain.api.adapter.repository;
 
 import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
+import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
+import com.api.expose.domain.api.model.entity.ApiVersionEntity;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
+import com.api.expose.framework.common.pojo.PageResult;
 
 import java.util.List;
 
@@ -43,15 +46,15 @@ public interface IApiAssetRepository {
     /**
      * 分页查询 API 资产
      */
-    com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords,
-                                                                                   String groupName,
-                                                                                   String status,
-                                                                                   com.api.expose.framework.common.pojo.PageParam pageParam);
+    PageResult<ApiAssetAggregate> pageAssets(String keywords,
+                                             String groupName,
+                                             String status,
+                                             com.api.expose.framework.common.pojo.PageParam pageParam);
 
     /**
      * 查询资产下的所有端点
      */
-    java.util.List<com.api.expose.domain.api.model.entity.ApiEndpointEntity> queryEndpointsByAssetId(Long assetId);
+    List<ApiEndpointEntity> queryEndpointsByAssetId(Long assetId);
 
     /**
      * 保存端点
@@ -66,6 +69,6 @@ public interface IApiAssetRepository {
     /**
      * 查询资产的所有版本记录
      */
-    java.util.List<com.api.expose.domain.api.model.entity.ApiVersionEntity> queryVersionsByAssetId(Long assetId);
+    List<ApiVersionEntity> queryVersionsByAssetId(Long assetId);
 }
 

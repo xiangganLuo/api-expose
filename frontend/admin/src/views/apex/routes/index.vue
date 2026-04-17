@@ -42,13 +42,6 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="120">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleSync(scope.row)">
-            同步权重
-          </el-button>
-        </template>
-      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -108,11 +101,6 @@ const getMethodTag = (method: string) => {
     DELETE: 'danger'
   }
   return map[method] || 'info'
-}
-
-const handleSync = (row: any) => {
-  // 占位功能
-  console.log('Syncing route rule:', row.id)
 }
 
 onMounted(() => {

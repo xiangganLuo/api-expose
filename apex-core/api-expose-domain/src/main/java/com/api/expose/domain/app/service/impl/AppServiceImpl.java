@@ -60,7 +60,7 @@ public class AppServiceImpl implements IAppService {
     }
 
     @Override
-    public com.api.expose.framework.common.pojo.PageResult<DeveloperAppEntity> pageApps(String keywords, String status,
+    public PageResult<DeveloperAppEntity> pageApps(String keywords, String status,
                                                                                         com.api.expose.framework.common.pojo.PageParam pageParam) {
         return appRepository.pageApps(keywords, status, pageParam);
     }

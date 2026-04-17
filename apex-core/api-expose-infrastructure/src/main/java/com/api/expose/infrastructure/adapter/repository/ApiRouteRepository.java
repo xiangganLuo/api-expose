@@ -37,6 +37,7 @@ public class ApiRouteRepository implements IApiRouteRepository {
                 new Page<>(pageParam.getPageNo(), pageParam.getPageSize()), wrapper);
         
         List<RouteRuleVO> list = page.getRecords().stream().map(po -> RouteRuleVO.builder()
+                .id(po.getId())
                 .apiAssetId(po.getApiAssetId())
                 .endpointId(po.getEndpointId())
                 .httpMethod(po.getHttpMethod())

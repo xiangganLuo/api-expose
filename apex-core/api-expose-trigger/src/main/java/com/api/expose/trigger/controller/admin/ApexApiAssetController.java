@@ -5,6 +5,7 @@ import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
 import com.api.expose.domain.api.model.valobj.ProtocolTypeEnum;
 import com.api.expose.domain.api.service.IApiAssetService;
+import com.api.expose.infrastructure.gateway.HttpForwardService;
 import com.api.expose.framework.common.pojo.CommonResult;
 import com.api.expose.framework.common.pojo.PageResult;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiAssetImportReqVO;
@@ -20,10 +21,12 @@ import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -40,6 +43,9 @@ public class ApexApiAssetController {
 
     @Resource
     private IApiAssetService apiAssetService;
+
+    @Resource
+    private HttpForwardService httpForwardService;
 
     @PostMapping("/import")
     @Operation(summary = "资产导入")
@@ -129,21 +135,20 @@ public class ApexApiAssetController {
     @PostMapping("/try")
     @Operation(summary = "在线调试")
     @PreAuthorize("@ss.hasPermission('apex:asset:try')")
-    public ResponseEntity<byte[]> tryEndpoint(@Valid @RequestBody ApexApiTryReqVO reqVO) {
-        // 1. 获取调试环境
-        String envCode = StrUtil.nullToDefault(reqVO.getEnvCode(), "test");
+    public Mono<ResponseEntity<byte[]>> tryEndpoint(@Valid @RequestBody ApexApiTryReqVO reqVO) {
+        String envCode = StrUtil.isBlank(reqVO.getEnvCode()) ? "test" : reqVO.getEnvCode();
 
-        // 2. 找到对应的端点获取路径
+        // 1. 找到对应的端点获取路径
         List<ApiEndpointEntity> endpoints = apiAssetService.queryEndpoints(reqVO.getAssetId());
         ApiEndpointEntity endpoint = endpoints.stream()
                 .filter(e -> e.getPath().equals(reqVO.getEndpointPath()))
                 .findFirst().orElse(null);
 
         if (endpoint == null) {
-            return ResponseEntity.status(404).body("Endpoint not found".getBytes());
+            return Mono.just(ResponseEntity.status(404).body("Endpoint not found".getBytes()));
         }
 
-        // 3. 获取环境对应的 BaseUrl
+        // 2. 获取环境对应的 BaseUrl
         List<com.api.expose.domain.api.model.entity.ApiAssetEnvEntity> assetEnvs = apiAssetService.queryAssetEnvs(reqVO.getAssetId());
         String baseUrl = assetEnvs.stream()
                 .filter(env -> env.getEnvCode().equals(envCode))
@@ -158,8 +163,13 @@ public class ApexApiAssetController {
             baseUrl = resolveUrl(baseUrl, endpoint.getPath());
         }
 
-        // TODO 对接 HttpForwardService 实现真实转发；当前占位返回 501
-        return ResponseEntity.status(501).body(("Target URL: " + baseUrl + " | Environment: " + envCode + " | forward service pending").getBytes());
+        if (StrUtil.isBlank(baseUrl)) {
+            return Mono.just(ResponseEntity.status(400).body("Target URL could not be resolved".getBytes()));
+        }
+
+        // 3. 转换 HttpMethod & 执行转发
+        HttpMethod method = HttpMethod.valueOf(reqVO.getHttpMethod().toUpperCase());
+        return httpForwardService.forward(baseUrl, method, reqVO.getHeaders(), reqVO.getBody());
     }
 
     private String resolveUrl(String baseUrl, String relativePath) {

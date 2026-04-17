@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RouteRuleVO {
 
+    /** 规则 ID */
+    private Long id;
     /** API 资产 ID */
     private Long apiAssetId;
     /** 端点 ID */

@@ -37,7 +37,7 @@ public class ApexRouteRuleController {
         PageResult<RouteRuleVO> pageResult = apiRouteRepository.pageRouteRules(pageReqVO.getKeywords(), pageReqVO);
         List<ApexRouteRuleRespVO> list = pageResult.getList().stream().map(vo -> {
             ApexRouteRuleRespVO respVO = new ApexRouteRuleRespVO();
-            respVO.setId(null); // RouteRuleVO 中暂无 ID，可通过聚合或其他字段填充，若需主键可扩展 VO
+            respVO.setId(vo.getId());
             respVO.setApiAssetId(vo.getApiAssetId());
             respVO.setEndpointId(vo.getEndpointId());
             respVO.setHttpMethod(vo.getHttpMethod());

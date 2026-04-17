@@ -3,6 +3,7 @@ package com.api.expose.infrastructure.adapter.repository;
 import com.api.expose.domain.api.adapter.repository.IApiAssetRepository;
 import com.api.expose.domain.api.model.aggregate.ApiAssetAggregate;
 import com.api.expose.domain.api.model.valobj.ApiStatusEnum;
+import com.api.expose.framework.common.pojo.PageResult;
 import com.api.expose.infrastructure.dao.IApiAssetDao;
 import com.api.expose.infrastructure.dao.IApiEndpointDao;
 import com.api.expose.infrastructure.dao.IApiVersionDao;
@@ -109,8 +110,8 @@ public class ApiAssetRepository implements IApiAssetRepository {
     }
 
     @Override
-    public com.api.expose.framework.common.pojo.PageResult<ApiAssetAggregate> pageAssets(String keywords, String groupName, String status,
-                                                                                           com.api.expose.framework.common.pojo.PageParam pageParam) {
+    public PageResult<ApiAssetAggregate> pageAssets(String keywords, String groupName, String status,
+                                                    com.api.expose.framework.common.pojo.PageParam pageParam) {
         LambdaQueryWrapper<ApiAssetPO> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(keywords)) {
             wrapper.like(ApiAssetPO::getName, keywords).or().like(ApiAssetPO::getGroupName, keywords);

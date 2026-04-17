@@ -41,7 +41,7 @@ public class GatewayServiceImpl implements IGatewayService {
     private IApiCallRecordRepository apiCallRecordRepository;
 
     @Override
-    public Mono<ResponseEntity<byte[]>> execute(String apiKey, String path, HttpMethod method, Map<String, String> headers, Object body) {
+    public Mono<ResponseEntity<byte[]>> execute(String apiKey, String path, String queryString, HttpMethod method, Map<String, String> headers, Object body) {
         long start = System.currentTimeMillis();
         log.info("网关收到请求: {} [{}] apiKey: {}", path, method, apiKey);
 
@@ -63,7 +63,10 @@ public class GatewayServiceImpl implements IGatewayService {
         }
 
         // 4. 执行异步 HTTP 转发
-        String targetUrl = rule.getUpstreamUrl() + rule.getUpstreamPath();
+        String targetUrl = rule.getUpstreamUrl();
+        if (queryString != null && !queryString.isEmpty()) {
+            targetUrl += (targetUrl.contains("?") ? "&" : "?") + queryString;
+        }
         
         return forwardPort.forward(targetUrl, method, headers, body)
                 .doOnNext(response -> {
