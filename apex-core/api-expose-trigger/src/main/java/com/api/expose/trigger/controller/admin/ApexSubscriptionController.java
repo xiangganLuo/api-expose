@@ -30,7 +30,7 @@ import static com.api.expose.framework.tenant.core.context.TenantContextHolder.g
 @RestController
 @RequestMapping("/apex/subscriptions")
 @Validated
-public class ApexSubscriptionAdminController {
+public class ApexSubscriptionController {
 
     @Resource
     private IAppService appService;
