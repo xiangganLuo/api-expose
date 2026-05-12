@@ -17,6 +17,7 @@ import com.api.expose.trigger.controller.admin.vo.asset.ApexApiEndpointRespVO;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiEndpointSaveReqVO;
 import com.api.expose.trigger.controller.admin.vo.asset.ApexApiVersionRespVO;
 import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
+import com.api.expose.framework.common.util.UrlUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -160,7 +161,7 @@ public class ApexApiAssetController {
             baseUrl = endpoint.getUpstreamUrl();
         } else {
             // 拼接最终地址
-            baseUrl = resolveUrl(baseUrl, endpoint.getPath());
+            baseUrl = UrlUtils.resolveUrl(baseUrl, endpoint.getPath());
         }
 
         if (StrUtil.isBlank(baseUrl)) {
@@ -170,15 +171,6 @@ public class ApexApiAssetController {
         // 3. 转换 HttpMethod & 执行转发
         HttpMethod method = HttpMethod.valueOf(reqVO.getHttpMethod().toUpperCase());
         return httpForwardService.forward(baseUrl, method, reqVO.getHeaders(), reqVO.getBody());
-    }
-
-    private String resolveUrl(String baseUrl, String relativePath) {
-        if (StrUtil.isBlank(relativePath)) return baseUrl;
-        boolean baseEndsWithSlash = baseUrl.endsWith("/");
-        boolean pathStartsWithSlash = relativePath.startsWith("/");
-        if (baseEndsWithSlash && pathStartsWithSlash) return baseUrl + relativePath.substring(1);
-        else if (!baseEndsWithSlash && !pathStartsWithSlash) return baseUrl + "/" + relativePath;
-        else return baseUrl + relativePath;
     }
 
     // ====== 资产环境配置 ======

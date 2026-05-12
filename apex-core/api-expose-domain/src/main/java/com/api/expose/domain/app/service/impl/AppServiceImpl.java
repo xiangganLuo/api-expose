@@ -34,7 +34,7 @@ public class AppServiceImpl implements IAppService {
     @Override
     public DeveloperAppEntity createApp(DeveloperAppEntity appEntity) {
         Long tenantId = getTenantId();
-        log.info("正在创建应用: {}, 租户: {}", appEntity.getAppName(), tenantId);
+        log.debug("正在创建应用: {}, 租户: {}", appEntity.getAppName(), tenantId);
         
         // 1. 生成 API Key and Secret (模拟逻辑)
         String apiKey = "ak_" + RandomStringUtils.randomAlphanumeric(16).toLowerCase();
@@ -77,7 +77,7 @@ public class AppServiceImpl implements IAppService {
 
     @Override
     public Long applySubscription(SubscriptionEntity subscriptionEntity) {
-        log.info("正在申请订阅: appId={}, apiAssetId={}", subscriptionEntity.getAppId(), subscriptionEntity.getApiAssetId());
+        log.debug("正在申请订阅: appId={}, apiAssetId={}", subscriptionEntity.getAppId(), subscriptionEntity.getApiAssetId());
 
         Long tenantId = getTenantId();
         
@@ -94,7 +94,7 @@ public class AppServiceImpl implements IAppService {
 
     @Override
     public void auditSubscription(Long subscriptionId, SubscriptionStatusEnum status, String remark) {
-        log.info("正在审核订阅: id={}, 结果: {}", subscriptionId, status.getCode());
+        log.debug("正在审核订阅: id={}, 结果: {}", subscriptionId, status.getCode());
         appRepository.updateSubscriptionStatus(subscriptionId, status, remark);
         
         // 如果是已通过，同步到网关

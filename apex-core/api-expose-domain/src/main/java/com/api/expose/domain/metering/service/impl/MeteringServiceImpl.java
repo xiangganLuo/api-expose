@@ -23,7 +23,7 @@ public class MeteringServiceImpl implements IMeteringService {
 
     @Override
     public void recordApiCall(ApiCallRecordEntity record) {
-        log.info("记录 API 调用, apiAssetId:{}, appId:{}, responseCode:{}", record.getApiAssetId(), record.getAppId(), record.getResponseCode());
+        log.debug("记录 API 调用, apiAssetId:{}, appId:{}, responseCode:{}", record.getApiAssetId(), record.getAppId(), record.getResponseCode());
         meteringRepository.saveCallRecord(record);
     }
 

@@ -2,6 +2,7 @@ package com.api.expose.domain.metering.adapter.repository;
 
 import com.api.expose.domain.metering.model.entity.ApiCallRecordEntity;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -40,5 +41,10 @@ public interface IApiCallRecordRepository {
      * 查询资产的调用趋势
      */
     List<Map<String, Object>> queryAssetMetricsTrend(Long apiAssetId, int days);
+
+    /**
+     * 按时间段查询调用记录（用于计费）
+     */
+    List<ApiCallRecordEntity> queryRecordsByPeriod(Date startDate, Date endDate);
 
 }

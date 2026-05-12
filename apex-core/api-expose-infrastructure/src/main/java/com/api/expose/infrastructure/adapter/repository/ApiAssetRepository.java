@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -81,8 +82,30 @@ public class ApiAssetRepository implements IApiAssetRepository {
     @Override
     public List<ApiAssetAggregate> queryApiAssets() {
         List<ApiAssetPO> assetPOs = apiAssetDao.selectList(new LambdaQueryWrapper<>());
+        if (assetPOs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        // 批量查询所有资产的端点和版本，避免 N+1 问题
+        List<Long> assetIds = assetPOs.stream().map(ApiAssetPO::getId).collect(Collectors.toList());
+        
+        List<ApiEndpointPO> allEndpoints = apiEndpointDao.selectList(
+                new LambdaQueryWrapper<ApiEndpointPO>().in(ApiEndpointPO::getAssetId, assetIds));
+        List<ApiVersionPO> allVersions = apiVersionDao.selectList(
+                new LambdaQueryWrapper<ApiVersionPO>().in(ApiVersionPO::getAssetId, assetIds));
+        
+        // 按 assetId 分组
+        Map<Long, List<ApiEndpointPO>> endpointsByAsset = allEndpoints.stream()
+                .collect(Collectors.groupingBy(ApiEndpointPO::getAssetId));
+        Map<Long, List<ApiVersionPO>> versionsByAsset = allVersions.stream()
+                .collect(Collectors.groupingBy(ApiVersionPO::getAssetId));
+        
         return assetPOs.stream()
-                .map(po -> buildAggregate(po, Collections.emptyList(), Collections.emptyList()))
+                .map(po -> buildAggregate(
+                        po,
+                        endpointsByAsset.getOrDefault(po.getId(), Collections.emptyList()),
+                        versionsByAsset.getOrDefault(po.getId(), Collections.emptyList())
+                ))
                 .collect(Collectors.toList());
     }
 

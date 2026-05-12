@@ -28,7 +28,7 @@ public class HttpForwardService implements IForwardPort {
 
     @Override
     public Mono<ResponseEntity<byte[]>> forward(String url, HttpMethod method, Map<String, String> headers, Object body) {
-        log.info("开始网关转发: {} [{}]", url, method);
+        log.debug("开始网关转发: {} [{}]", url, method);
 
         WebClient.RequestBodySpec request = webClient.method(method)
                 .uri(url);

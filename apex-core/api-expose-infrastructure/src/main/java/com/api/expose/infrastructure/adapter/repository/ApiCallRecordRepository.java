@@ -4,12 +4,15 @@ import com.api.expose.domain.metering.adapter.repository.IApiCallRecordRepositor
 import com.api.expose.domain.metering.model.entity.ApiCallRecordEntity;
 import com.api.expose.infrastructure.dao.IApiCallRecordDao;
 import com.api.expose.infrastructure.dao.po.ApiCallRecordPO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 调用流水仓储实现
@@ -68,5 +71,28 @@ public class ApiCallRecordRepository implements IApiCallRecordRepository {
     @Override
     public List<Map<String, Object>> queryAssetMetricsTrend(Long apiAssetId, int days) {
         return apiCallRecordDao.queryAssetMetricsTrend(apiAssetId, days);
+    }
+
+    @Override
+    public List<ApiCallRecordEntity> queryRecordsByPeriod(Date startDate, Date endDate) {
+        LambdaQueryWrapper<ApiCallRecordPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(ApiCallRecordPO::getCallTime, 
+                startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime())
+               .lt(ApiCallRecordPO::getCallTime,
+                endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+        
+        List<ApiCallRecordPO> pos = apiCallRecordDao.selectList(wrapper);
+        return pos.stream().map(po -> ApiCallRecordEntity.builder()
+                .tenantId(po.getTenantId())
+                .apiAssetId(po.getApiAssetId())
+                .appId(po.getAppId())
+                .requestPath(po.getRequestPath())
+                .httpMethod(po.getHttpMethod())
+                .responseCode(po.getResponseCode())
+                .latencyMs(po.getLatencyMs())
+                .callerIp(po.getCallerIp())
+                .callTime(po.getCallTime() != null ? 
+                        Date.from(po.getCallTime().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
+                .build()).collect(Collectors.toList());
     }
 }

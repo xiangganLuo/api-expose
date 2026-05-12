@@ -1,5 +1,8 @@
 package com.api.expose.domain.policy.strategy.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.api.expose.domain.policy.strategy.IAccessControlStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,10 +20,30 @@ public class DefaultAccessControlStrategy implements IAccessControlStrategy {
             return true;
         }
         
-        // 解析 ruleJson 判断 IP 是否在黑/白名单中 
-        // 比如 ruleJson = {"blacklist": ["192.168.1.100"]}
-        // 这里提供默认放行的扩展基础结构
-        log.debug("执行访问控制过滤: 客户端IP: {}, 规则: {}", clientIp, ruleJson);
-        return true;
+        try {
+            JSONObject rule = JSON.parseObject(ruleJson);
+            
+            // 检查黑名单
+            JSONArray blacklist = rule.getJSONArray("blacklist");
+            if (blacklist != null && blacklist.contains(clientIp)) {
+                log.debug("访问被拒绝: IP {} 在黑名单中", clientIp);
+                return false;
+            }
+            
+            // 检查白名单（如果配置了白名单，则只允许白名单中的 IP）
+            JSONArray whitelist = rule.getJSONArray("whitelist");
+            if (whitelist != null && !whitelist.isEmpty()) {
+                boolean allowed = whitelist.contains(clientIp);
+                if (!allowed) {
+                    log.debug("访问被拒绝: IP {} 不在白名单中", clientIp);
+                }
+                return allowed;
+            }
+            
+            return true;
+        } catch (Exception e) {
+            log.error("访问控制策略执行异常，默认放行", e);
+            return true; // 异常降级放行
+        }
     }
 }

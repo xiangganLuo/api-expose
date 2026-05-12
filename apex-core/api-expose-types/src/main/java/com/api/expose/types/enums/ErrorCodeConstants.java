@@ -19,4 +19,8 @@ public interface ErrorCodeConstants {
     // ========== 网关与前置校验 1-003-002-000 ==========
     ErrorCode API_KEY_INVALID = new ErrorCode(1_003_002_001, "无效或已禁用的 ApiKey");
     ErrorCode ROUTE_NOT_FOUND = new ErrorCode(1_003_002_002, "未找到匹配的路由规则");
+
+    // ========== API 资产管理 1-003-003-000 ==========
+    ErrorCode API_PARSE_FAILED = new ErrorCode(1_003_003_001, "无法解析 OpenAPI 内容，请检查格式是否正确");
+    ErrorCode API_ENV_NOT_CONFIGURED = new ErrorCode(1_003_003_002, "所选环境未配置 BaseUrl，请先在环境配置中设置");
 }

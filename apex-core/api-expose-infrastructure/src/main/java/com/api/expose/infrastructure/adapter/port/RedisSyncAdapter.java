@@ -37,7 +37,7 @@ public class RedisSyncAdapter implements IGatewaySyncPort {
             message.put("timestamp", System.currentTimeMillis());
 
             long count = topic.publish(JSON.toJSONString(message));
-            log.info("API 同步消息已广播, assetId: {}, 接收者数量: {}", aggregate.getAssetId(), count);
+            log.debug("API 同步消息已广播, assetId: {}, 接收者数量: {}", aggregate.getAssetId(), count);
         } catch (Exception e) {
             log.error("API 同步故障", e);
         }
@@ -54,7 +54,7 @@ public class RedisSyncAdapter implements IGatewaySyncPort {
             message.put("timestamp", System.currentTimeMillis());
 
             topic.publish(JSON.toJSONString(message));
-            log.info("API 移除消息已广播, assetId: {}", assetId);
+            log.debug("API 移除消息已广播, assetId: {}", assetId);
         } catch (Exception e) {
             log.error("API 移除广播故障", e);
         }
@@ -72,7 +72,7 @@ public class RedisSyncAdapter implements IGatewaySyncPort {
             message.put("timestamp", System.currentTimeMillis());
 
             topic.publish(JSON.toJSONString(message));
-            log.info("订阅同步消息已广播, apiKey: {}, assetId: {}", apiKey, apiAssetId);
+            log.debug("订阅同步消息已广播, apiKey: {}, assetId: {}", apiKey, apiAssetId);
         } catch (Exception e) {
             log.error("订阅同步故障", e);
         }
@@ -89,7 +89,7 @@ public class RedisSyncAdapter implements IGatewaySyncPort {
             message.put("timestamp", System.currentTimeMillis());
 
             topic.publish(JSON.toJSONString(message));
-            log.info("订阅移除消息已广播, appId: {}, assetId: {}", appId, apiAssetId);
+            log.debug("订阅移除消息已广播, appId: {}, assetId: {}", appId, apiAssetId);
         } catch (Exception e) {
             log.error("订阅移除故障", e);
         }

@@ -4,6 +4,7 @@ import com.api.expose.domain.api.adapter.port.IApiParserPort;
 import com.api.expose.domain.api.model.entity.ApiEndpointEntity;
 import com.api.expose.domain.api.model.valobj.ApiDefinitionVO;
 import com.api.expose.domain.api.model.valobj.HttpMethodEnum;
+import com.api.expose.types.enums.ErrorCodeConstants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.parser.OpenAPIV3Parser;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.api.expose.framework.common.exception.util.ServiceExceptionUtil.exception;
+
 /**
  * Swagger/OpenAPI 解析适配器
  */
@@ -23,13 +26,13 @@ public class SwaggerParserAdapter implements IApiParserPort {
 
     @Override
     public List<ApiEndpointEntity> parseOpenApi(String content) {
-        log.info("开始解析 OpenAPI 内容, content 长度:{}", content.length());
+        log.debug("开始解析 OpenAPI 内容, content 长度:{}", content.length());
 
         OpenAPIV3Parser parser = new OpenAPIV3Parser();
         OpenAPI openAPI = parser.readContents(content).getOpenAPI();
 
         if (openAPI == null) {
-            throw new RuntimeException("无法解析 OpenAPI 内容，请检查格式是否正确");
+            throw exception(ErrorCodeConstants.API_PARSE_FAILED);
         }
 
         List<ApiEndpointEntity> endpoints = new ArrayList<>();

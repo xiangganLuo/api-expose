@@ -12,13 +12,17 @@ import com.api.expose.domain.api.model.valobj.RouteRuleVO;
 import com.api.expose.domain.api.service.IApiAssetService;
 import com.api.expose.domain.gateway.adapter.port.IGatewaySyncPort;
 import com.api.expose.framework.common.pojo.PageResult;
+import com.api.expose.framework.common.util.UrlUtils;
+import com.api.expose.types.enums.ErrorCodeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.api.expose.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static com.api.expose.framework.tenant.core.context.TenantContextHolder.getTenantId;
 
 /**
@@ -46,7 +50,7 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     @Override
     public void importApi(ApiAssetAggregate aggregate, String content) {
         Long tenantId = getTenantId();
-        log.info("开始导入 API: {}", aggregate.getName());
+        log.debug("开始导入 API: {}", aggregate.getName());
         aggregate.setTenantId(tenantId);
         if (aggregate.getStatus() == null) {
             aggregate.setStatus(ApiStatusEnum.DRAFT);
@@ -77,15 +81,16 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void publishApi(Long assetId, String envCode) {
-        log.info("正在发布 API: {} 到环境: {}", assetId, envCode);
+        log.debug("正在发布 API: {} 到环境: {}", assetId, envCode);
         ApiAssetAggregate aggregate = apiAssetRepository.queryApiAssetById(assetId);
         if (aggregate == null) return;
         
         // 获取环境对应的 BaseUrl
         String baseUrl = apiAssetEnvRepository.queryBaseUrl(assetId, envCode);
         if (cn.hutool.core.util.StrUtil.isBlank(baseUrl)) {
-            throw new RuntimeException("所选环境未配置 BaseUrl，请先在环境配置中设置");
+            throw exception(ErrorCodeConstants.API_ENV_NOT_CONFIGURED);
         }
 
         aggregate.publish();
@@ -94,7 +99,7 @@ public class ApiAssetServiceImpl implements IApiAssetService {
         // 生成并保存路由规则
         List<RouteRuleVO> routeRules = aggregate.getEndpoints().stream().map(e -> {
             // 解析最终地址 (BaseUrl + RelativePath)
-            String resolvedUrl = resolveUrl(baseUrl, e.getPath());
+            String resolvedUrl = UrlUtils.resolveUrl(baseUrl, e.getPath());
 
             return RouteRuleVO.builder()
                     .apiAssetId(assetId)
@@ -113,22 +118,6 @@ public class ApiAssetServiceImpl implements IApiAssetService {
         gatewaySyncPort.syncApiAsset(aggregate);
     }
 
-    private String resolveUrl(String baseUrl, String relativePath) {
-        if (cn.hutool.core.util.StrUtil.isBlank(relativePath)) {
-            return baseUrl;
-        }
-        boolean baseEndsWithSlash = baseUrl.endsWith("/");
-        boolean pathStartsWithSlash = relativePath.startsWith("/");
-
-        if (baseEndsWithSlash && pathStartsWithSlash) {
-            return baseUrl + relativePath.substring(1);
-        } else if (!baseEndsWithSlash && !pathStartsWithSlash) {
-            return baseUrl + "/" + relativePath;
-        } else {
-            return baseUrl + relativePath;
-        }
-    }
-
     @Override
     public void saveAssetEnv(ApiAssetEnvEntity entity) {
         apiAssetEnvRepository.save(entity);
@@ -145,8 +134,9 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void offlineApi(Long assetId) {
-        log.info("正在下架 API: {}", assetId);
+        log.debug("正在下架 API: {}", assetId);
         ApiAssetAggregate aggregate = apiAssetRepository.queryApiAssetById(assetId);
         if (aggregate == null) return;
         
@@ -161,8 +151,9 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deprecateApi(Long assetId) {
-        log.info("正在废弃 API: {}", assetId);
+        log.debug("正在废弃 API: {}", assetId);
         ApiAssetAggregate aggregate = apiAssetRepository.queryApiAssetById(assetId);
         if (aggregate == null) return;
         
@@ -178,6 +169,7 @@ public class ApiAssetServiceImpl implements IApiAssetService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteApiAsset(Long assetId) {
         apiAssetRepository.deleteApiAsset(assetId);
         apiEndpointRepository.deleteByAssetId(assetId);
